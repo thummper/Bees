@@ -1,10 +1,5 @@
 // import { tychei } from "seedrandom";
 
-// function drawRect(ctx, x, y, width, height){
-//     ctx.fillRect(x, y, width, height);
-// };
-
-
 
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
@@ -17,7 +12,13 @@ export default class canvasHandler {
 
         // Panning and zooming vars
         this.dragging = false;
+        this.zoomSensitivity = 500;
+        this.minZoom = 0.1;
+        this.maxZoom = 5;
+        this.trackedMousePos = null;
+        this.lastZoomMouse = null;
 
+        // Track global offset
         this.absPos = {
             scale: 1,
             offset: {
@@ -25,7 +26,7 @@ export default class canvasHandler {
                 y: 0
             }
         }
-
+        // Track panning information
         this.pan = {
             start: {
                 x: null,
@@ -49,26 +50,38 @@ export default class canvasHandler {
 
     registerListeners() {
         window.addEventListener("resize", this.windowResize.bind(this));
-
         // Register listeners for panning and zooming.
         this.canvas.addEventListener('mousedown', this.pointerDown.bind(this));
         this.canvas.addEventListener('mouseup', this.pointerUp.bind(this));
         this.canvas.addEventListener('mousemove', this.pointerMove.bind(this));
         this.canvas.addEventListener('wheel', this.mouseWheel.bind(this));
-
     }
 
     getGlobalMousePosition(event){
         // Get local mouse
         let loc  = this.getMousePosition(event);
+        // Inverse translation matrix?
+        // Undo the translation and then the scale
         let glob = {
-            x: loc.x - this.absPos.offset.x,
-            y: loc.y - this.absPos.offset.y,
+            x: (loc.x - this.absPos.offset.x) / this.absPos.scale,
+            y: (loc.y - this.absPos.offset.y) / this.absPos.scale,
         }
         console.log("Global: ", glob);
-
+        return glob;
     }
 
+    getLastGlobalMouse(){
+        // Get local mouse
+        let loc  = this.trackedMousePos;
+        // Inverse translation matrix?
+        // Undo the translation and then the scale
+        let glob = {
+            x: (loc.x - this.absPos.offset.x) / this.absPos.scale,
+            y: (loc.y - this.absPos.offset.y) / this.absPos.scale,
+        }
+        // console.log("Global: ", glob);
+        return glob;
+    }
 
     getMousePosition(event){
         // Canvas may not be at window (0, 0)
@@ -82,10 +95,10 @@ export default class canvasHandler {
 
     // Mouse button is pressed
     pointerDown(event) {
+        console.log("Pointer down triggered");
         this.dragging = true;
         // Get current mouse position
         this.pan.start = this.getMousePosition(event);
-
         // Also get current mouse pos as global coords.
         this.getGlobalMousePosition(event);
 
@@ -94,21 +107,20 @@ export default class canvasHandler {
     // Mouse is moved
     pointerMove(event) {
         // Only really care if mouse is moved when we are dragging.
+        let currentPos = this.getMousePosition(event);
+        this.trackedMousePos = currentPos;
         if(this.dragging) {
             // Logic for panning, track panning offset
             // Get current mouse position
-            let currentPos = this.getMousePosition(event);
+
             // Work out offset from start.
             let offset = {
-                x: currentPos.x - this.pan.start.x,
-                y: currentPos.y - this.pan.start.y
+                x: (currentPos.x - this.pan.start.x)  ,
+                y: (currentPos.y - this.pan.start.y)
             };
-
+            console.log(offset);
             this.pan.offset.x = this.absPos.offset.x + offset.x;
             this.pan.offset.y = this.absPos.offset.y + offset.y;
-
-
-            console.log("Panning offset: ", this.pan.offset )
         }
     }
 
@@ -118,16 +130,25 @@ export default class canvasHandler {
         this.dragging = false;
         this.pan.start.x = null;
         this.pan.start.y = null;
+        // Maintain absolute translation
 
         this.absPos.offset.x = this.pan.offset.x;
         this.absPos.offset.y = this.pan.offset.y;
-
-
     }
+
 
     // Mouse wheel
     mouseWheel(event) {
+        let zoomAmount = 1 - event.deltaY / this.zoomSensitivity;
+        // Zooming while not panning
+        if( !this.dragging ){
+            this.absPos.scale = this.absPos.scale * zoomAmount;
+            this.absPos.scale = Math.min(this.absPos.scale, this.maxZoom);
+            this.absPos.scale = Math.max(this.absPos.scale, this.minZoom);
+            console.log(" Current Scale: ", this.absPos.scale);
 
+            // When I zoom, the overall offset changes by the scale automatically
+        }
     }
 
     // Call this to make sure client canvas size matches context, changes when the window resizes (canvas uses % vals for w/h)
@@ -153,14 +174,18 @@ export default class canvasHandler {
     draw() {
         // Make sure canvas is correct size
         this.windowResize();
+        this.ctx.save();
         this.ctx.translate(this.pan.offset.x, this.pan.offset.y);
+        this.ctx.scale(this.absPos.scale, this.absPos.scale);
+
         this.drawMap();
+        this.ctx.restore();
+
         requestAnimationFrame(this.draw.bind(this));
     }
 
     // Draw map
     drawMap() {
-
         if(this.map != null) {
             // Clear map
             this.ctx.clearRect(this.map.startX, this.map.startY, this.map.width, this.map.height);
@@ -182,8 +207,6 @@ export default class canvasHandler {
             }
         }
     }
-
-
 }
 
 
