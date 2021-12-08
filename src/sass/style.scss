@@ -1,9 +1,13 @@
+$slate: #22272c;
+
+
 * {
     margin: 0;
     padding: 0;
 }
 
 html, body{
+    background: $slate;
     height: 100%;
     position: relative;
 }

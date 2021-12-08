@@ -180,8 +180,8 @@ export default class canvasHandler {
     drawMap() {
         if(this.map != null) {
             // Clear map
-            this.ctx.clearRect(this.map.startX, this.map.startY, this.map.width * 2, this.map.height * 2);
-            console.log(this.map.startX, this.map.startY, this.map.width, this.map.height);
+            console.log(this.view.x);
+            this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
             // Draw edges
             this.ctx.beginPath();
             this.map.voronoi.render(this.ctx);
