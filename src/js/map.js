@@ -1,6 +1,8 @@
 const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
 
+import customVoronoi from './custom_voronoi.js';
+
 export default class Map {
     constructor(options){
         // Vars
@@ -10,8 +12,6 @@ export default class Map {
         this.width  = options.width;
         this.height = options.height;
         this.numPoints = options.numPoints;
-
-
 
         this.points    = [];
         this.randomGen = null;
@@ -34,13 +34,12 @@ export default class Map {
 
             this.points.push([rx, ry]);
         }
-
-
     }
 
     generateVoronoi(){
         this.delaunay = Delaunay.from(this.points);
-        this.voronoi  = this.delaunay.voronoi([this.startX, this.startY, this.width, this.height]);
+        this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
+
     }
 // End Map
 };

@@ -1,6 +1,4 @@
 // import { tychei } from "seedrandom";
-
-
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
 
@@ -158,6 +156,7 @@ export default class canvasHandler {
         if(this.map == null) {
             console.log("First time map has been attached. ");
             this.map = map;
+
         } else {
             console.log("Map is being replaced. ");
             this.map = map;
@@ -180,11 +179,25 @@ export default class canvasHandler {
     drawMap() {
         if(this.map != null) {
             // Clear map
-            console.log(this.view.x);
+
             this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
             // Draw edges
             this.ctx.beginPath();
-            this.map.voronoi.render(this.ctx);
+            // TODO: custom draw function
+            //
+
+            let display = {
+                x: - this.view.x / this.view.zoom,
+                y:  - this.view.y / this.view.zoom,
+                width: this.canvas.width / this.view.zoom,
+                height: this.canvas.height / this.view.zoom
+            };
+
+            this.map.voronoi.render(this.ctx, display);
+
+
+            //this.renderMap();
+            //this.renderHull();
             this.ctx.stroke();
 
             // Draw centers.
@@ -204,5 +217,74 @@ export default class canvasHandler {
                 this.ctx.fill();
             }
         }
+    }
+
+
+    // Drawing functions from D3
+    renderMap(){
+        // Previously rewrote the wrong function..
+        let voronoi = this.map.voronoi;
+        const {delaunay: {halfedges, inedges, hull}, circumcenters, vectors} = voronoi;
+
+        if (hull.length <= 1) return null;
+
+        for(let i = 0; i < halfedges.length; ++i){
+            let j = halfedges[i];
+            if(j > i) continue;
+
+            let ti = Math.floor(i/3) * 2;
+            let tj = Math.floor(i/3) * 2;
+
+            let xi = circumcenters[ti];
+            let yi = circumcenters[ti + 1];
+
+            let xj = circumcenters[tj];
+            let yj = circumcenters[tj + 1];
+
+
+
+            console.log(xi, yi)
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+        // console.log(this.map);
+        // const {points, halfedges, triangles} = this.map.delaunay;
+        // for(let i = 0, n = halfedges.length; i < n; ++i) {
+        //     let j = halfedges[i];
+
+        //     if (j < i) continue;
+        //     const ti = triangles[i] * 2;
+        //     const tj = triangles[j] * 2;
+
+        //     this.ctx.moveTo(points[ti], points[ti + 1]);
+        //     this.ctx.lineTo(points[tj], points[tj + 1]);
+
+        // }
+        // this.renderHull();
+    }
+
+
+    // Draws the outline of the map
+    renderHull(){
+        let {hull, points} = this.map.delaunay;
+
+        let h = hull[0] * 2, n = hull.length;
+        this.ctx.moveTo(points[h], points[h + 1]);
+        for ( let i = 1; i < n; i++ ) {
+            let h = 2 * hull[i];
+            this.ctx.lineTo( points[h], points[h + 1]);
+        }
+        this.ctx.closePath();
     }
 }
