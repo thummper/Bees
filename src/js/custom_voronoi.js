@@ -1,10 +1,14 @@
+
+
 const {Delaunay, Voronoi} = require('d3-delaunay');
 
 export default class customVoronoi extends Voronoi {
+
     constructor(delaunay, [startX, startY, width, height]){
 
         super(delaunay, [startX, startY, width, height]);
         this.display = null;
+        this.viewPadding = 100;
     }
 
     render(context, display){
@@ -19,6 +23,6 @@ export default class customVoronoi extends Voronoi {
     }
 
     outOfRange(val){
-        return val + 100 < this.display.x || val - 100 > ( this.display.x + this.display.width)
+        return val + this.viewPadding < this.display.x || val - this.viewPadding > ( this.display.x + this.display.width)
     }
 }
