@@ -1,6 +1,5 @@
 
 import '../sass/style.scss';
-import randomNumber from './helper.js';
 import canvasHandler from './canvasHandler';
 import Map from './map';
 
@@ -20,4 +19,15 @@ var mapOptions = {
 }
 let testMap = new Map(mapOptions);
 canvasManager.attachMap(testMap);
+
+
+let lloydbutton = document.getElementById("lloydrelax");
+console.log("LLOYD: ", lloydbutton);
+lloydbutton.addEventListener("click", function(){
+    console.log("Trying lloyd relaxation");
+    if(testMap.voronoi != null){
+        testMap.lloydRelaxation();
+    }
+
+})
 
