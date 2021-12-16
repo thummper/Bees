@@ -141,6 +141,8 @@ export default class canvasHandler {
         this.view.y -= wy * this.canvas.height * zoom;
 
         this.view.zoom += zoom;
+        this.view.zoom = Math.max(this.minZoom, this.view.zoom);
+        this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
 
     }
 
@@ -156,7 +158,6 @@ export default class canvasHandler {
         if(this.map == null) {
             console.log("First time map has been attached. ");
             this.map = map;
-
         } else {
             console.log("Map is being replaced. ");
             this.map = map;
@@ -170,6 +171,9 @@ export default class canvasHandler {
         this.ctx.save();
         this.ctx.translate(this.view.x, this.view.y);
         this.ctx.scale(this.view.zoom, this.view.zoom);
+        this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
+
+
         this.drawMap();
         this.ctx.restore();
         requestAnimationFrame(this.draw.bind(this));
@@ -188,7 +192,15 @@ export default class canvasHandler {
                 width: this.canvas.width / this.view.zoom,
                 height: this.canvas.height / this.view.zoom
             };
-            this.map.voronoi.render(this.ctx, display);
+
+            // Get cells that are within display
+            this.map.voronoi.setDisplay(display);
+            let renderCells = this.map.getCells(display);
+
+            this.map.voronoi.renderMap(renderCells, this.ctx);
+
+
+            // this.map.voronoi.render(this.ctx, display);
             this.ctx.stroke();
             this.ctx.closePath();
             this.drawCenters();
@@ -201,7 +213,6 @@ export default class canvasHandler {
         // TODO: Only draw points that are visible
         for( let p in points ) {
             let [x, y] = points[p];
-
             if( !this.map.voronoi.outOfRange(x) ){
                 this.ctx.beginPath();
                 if( points[p] == this.closestPont){

@@ -16,7 +16,7 @@ var mapOptions = {
     'y': -5000,
     'width': 10000,
     'height': 10000,
-    'numPoints': 10000
+    'numPoints': 5000
 }
 let testMap = new Map(mapOptions);
 canvasManager.attachMap(testMap);
