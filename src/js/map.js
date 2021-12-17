@@ -20,10 +20,14 @@ export default class Map {
         this.delaunay  = null;
         this.voronoi   = null;
 
+        this.relaxCounter = 0;
+        this.maxRelax     = 1;
+
         // Important
         this.initRandom();
         this.generatePoints();
         this.generateVoronoi();
+        this.relaxMap();
     }
     initRandom(){
         this.randomGen = SeedRandom(this.seed);
@@ -41,14 +45,12 @@ export default class Map {
     generateVoronoi(){
         this.delaunay = Delaunay.from(this.points);
         this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
-
+        // Get all information about cells (afaik d3 does not store this innately?)
         this.determineCells();
-
     }
 
     // Make data structure that contains cells.
     determineCells(){
-
         for(let i = 0; i < this.numPoints; i++){
             let cellPoints  = this.voronoi.getCell(i);
             let centerPoint = this.points[i];
@@ -63,31 +65,26 @@ export default class Map {
         this.delaunay = null;
         this.voronoi  = null;
         this.cells = []
-        this.generateVoronoi()
+        this.generateVoronoi();
+    }
 
+    relaxMap(){
+        while(this.relaxCounter < this.maxRelax){
+            this.lloydRelaxation();
+            this.resetVoronoi();
+            this.relaxCounter += 1;
+        }
     }
 
     // Apply Lloyd relaxation to make voronoi cells more uniform (should make a better map)
     lloydRelaxation(){
-        console.log("Relaxing");
         let newPoints = [];
         for(let i = 0; i < this.cells.length; i++){
             let cell = this.cells[i];
             let centerPoint = cell.centerPoint;
             let corners     = cell.cellPoints;
-
             let xtally = 0;
             let ytally = 0;
-
-            // let n = corners.length;
-
-            // // IDK what this does, from d3 code
-            // while (corners[0] === corners[n-2] && corners[1] === corners[n-1] && n > 1) n-=2;
-            // for( let j = 0; j < n; j += 2){
-            //     xtally += corners[j];
-            //     ytally += corners[j + 1];
-            // }
-
 
             for( let j = 0; j < corners.length; j +=2) {
                 xtally += corners[j];
@@ -99,15 +96,14 @@ export default class Map {
 
             // Just average the corners to get the cell's centroid, this will be the new point
             newPoints.push([xavg, yavg]);
+            // TODO: We could move in a weighted direction towards the average as relaxed map seems a bit too nice?
         }
         console.log(" Points: ", this.points.length, " New: ", newPoints.length);
         this.points = newPoints;
-        this.resetVoronoi();
+
     }
 
-
-
-    // Given camera informat, get all cells that are on screen
+    // Given camera info, get all cells that are on screen
     getCells(display){
         let visibleCells = [];
         for(let i = 0; i < this.cells.length; i++){

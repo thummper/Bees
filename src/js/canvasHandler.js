@@ -11,24 +11,24 @@ export default class canvasHandler {
         // Panning and zooming vars
         this.dragging = false;
         this.zoomSensitivity = 0.05;
-        this.minZoom = 0.1;
+        this.minZoom = 0.05;
         this.maxZoom = 5;
         this.trackedMousePos = null;
-
-        this.closestPoint = null;
+        this.closestCell = null;
 
         this.view = {
             x: 0,
             y: 0,
             zoom: 1
         };
+
         this.viewPos = {
             prevX: null,
             prevY: null,
             dragging: false
         };
 
-        this.map;
+        this.map = null;
         // Call functions
         // Make sure canvas is the correct size
         this.windowResize();
@@ -50,7 +50,7 @@ export default class canvasHandler {
     getClosestCenter(location){
         // Loop through map cells instead of points so we can get the whole cell
         let lowestDist   = Infinity;
-        this.closestPoint = null;
+        this.closestCell = null;
         let cells        = this.map.cells;
 
 
@@ -63,7 +63,7 @@ export default class canvasHandler {
                 let dist = Math.sqrt( Math.pow(cellCenter[0] - location.x, 2) + Math.pow( cellCenter[1] - location.y, 2));
                 if(dist < lowestDist){
                     lowestDist = dist;
-                    this.closestPoint = cell;
+                    this.closestCell = cell;
                 }
             }
 
@@ -137,18 +137,14 @@ export default class canvasHandler {
         let {x, y, deltaY} = event;
         let dir  = deltaY > 0 ? -1 : 1;
         let zoom = 1 * dir * this.zoomSensitivity;
-
         let pos = this.getMousePosition(event);
         let wx  = ( pos.x - this.view.x ) / ( this.canvas.width * this.view.zoom );
         let wy  = ( pos.y - this.view.y ) / ( this.canvas.height * this.view.zoom );
-
         this.view.x -= wx * this.canvas.width * zoom;
         this.view.y -= wy * this.canvas.height * zoom;
-
         this.view.zoom += zoom;
         this.view.zoom = Math.max(this.minZoom, this.view.zoom);
         this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
-
     }
 
     // Call this to make sure client canvas size matches context, changes when the window resizes (canvas uses % vals for w/h)
@@ -176,7 +172,6 @@ export default class canvasHandler {
         this.ctx.save();
         this.ctx.translate(this.view.x, this.view.y);
         this.ctx.scale(this.view.zoom, this.view.zoom);
-        this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
         this.drawMap();
         this.ctx.restore();
         requestAnimationFrame(this.draw.bind(this));
@@ -187,58 +182,52 @@ export default class canvasHandler {
         if(this.map != null) {
             // Clear map
             this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
-            // Draw edges
-            this.ctx.beginPath();
             let display = {
                 x: - this.view.x / this.view.zoom,
                 y:  - this.view.y / this.view.zoom,
                 width: this.canvas.width / this.view.zoom,
                 height: this.canvas.height / this.view.zoom
             };
-
-            // Get cells that are within display
+            // Tell the map where the camera is
             this.map.voronoi.setDisplay(display);
-            let renderCells = this.map.getCells(display);
-            this.map.voronoi.renderMap(renderCells, this.ctx);
-
-
+            // Get visible cells
+            let visibleCells = this.map.getCells(display);
+            // Draw visible cells
+            this.map.voronoi.renderMap(visibleCells, this.ctx);
+            this.drawCenters(visibleCells);
             // this.map.voronoi.render(this.ctx, display);
-            this.ctx.stroke();
-            this.ctx.closePath();
-            this.drawCenters();
         }
     }
 
-    drawCenters(){
-        // Draw centers.
-        let points = this.map.points;
-        // TODO: Only draw points that are visible
-        for( let p in points ) {
-            let [x, y] = points[p];
-            if( !this.map.voronoi.outOfRange(x) ){
-                this.ctx.beginPath();
+    drawCenters(cells){
+        // Draw centers of input cells
 
+        for(let i = 0; i < cells.length; i++){
+            let c = cells[i];
+            let [x, y] = c.centerPoint;
+            this.ctx.fillStyle = "orange";
+            // If current cell is focused, draw it's corners and highlight the center
+            if(this.closestCell != null && this.closestCell == c) {
                 this.ctx.fillStyle = "#8367C7";
-                if(this.closestPoint != null){
-                    console.log(this.closestPoint);
-                    if(points[p] == this.closestPoint.centerPoint) {
-                        this.ctx.fillStyle = "orange";
+                let corners = this.closestCell.cellPoints;
+                for(let p = 0; p < corners.length; p+=2){
+                    let x = corners[p];
+                    let y = corners[p + 1];
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                    this.ctx.closePath();
 
-                        // Also get corners and draw them.
-                        let corners = this.closestPoint.cellPoints;
-                        for(let p = 0; p < corners.length; p+=2){
-                            let x = corners[p];
-                            let y = corners[p + 1];
-                            this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
-
-                        }
-                    }
                 }
-                this.ctx.strokeText(( Math.floor(x) + " " + Math.floor(y)), x + 2, y - 12);
-                this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                this.ctx.fill();
-                this.ctx.closePath();
+                this.ctx.fillStyle = "pink";
             }
+
+            this.ctx.beginPath();
+            this.ctx.strokeText(( Math.floor(x) + " " + Math.floor(y)), x + 2, y - 12);
+            this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
+            this.ctx.fill();
+            this.ctx.closePath();
         }
+
     }
 }
