@@ -79,17 +79,23 @@ export default class Map {
             let xtally = 0;
             let ytally = 0;
 
-            let n = corners.length;
+            // let n = corners.length;
 
-            // IDK what this does, from d3 code
-            while (corners[0] === corners[n-2] && corners[1] === corners[n-1] && n > 1) n-=2;
-            for( let j = 0; j < n; j += 2){
+            // // IDK what this does, from d3 code
+            // while (corners[0] === corners[n-2] && corners[1] === corners[n-1] && n > 1) n-=2;
+            // for( let j = 0; j < n; j += 2){
+            //     xtally += corners[j];
+            //     ytally += corners[j + 1];
+            // }
+
+
+            for( let j = 0; j < corners.length; j +=2) {
                 xtally += corners[j];
                 ytally += corners[j + 1];
             }
 
-            let xavg = xtally / n;
-            let yavg = ytally / n;
+            let xavg = xtally / Math.floor(corners.length / 2);
+            let yavg = ytally / Math.floor(corners.length / 2);
 
             // Just average the corners to get the cell's centroid, this will be the new point
             newPoints.push([xavg, yavg]);

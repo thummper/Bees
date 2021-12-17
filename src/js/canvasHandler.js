@@ -15,7 +15,7 @@ export default class canvasHandler {
         this.maxZoom = 5;
         this.trackedMousePos = null;
 
-        this.closestPont = null;
+        this.closestPoint = null;
 
         this.view = {
             x: 0,
@@ -48,20 +48,26 @@ export default class canvasHandler {
     }
 
     getClosestCenter(location){
-        // Location is the global coord of mouse click, assuming that (0,0) is translated to center?
-        // So clientWidth/2, clientHeight/2
-        let points      = this.map.points;
-        let lowestDist  = Infinity;
+        // Loop through map cells instead of points so we can get the whole cell
+        let lowestDist   = Infinity;
+        this.closestPoint = null;
+        let cells        = this.map.cells;
 
-        for (let p in points) {
-            let [x, y] = points[p];
-            let dist = Math.sqrt( Math.pow( x - location.x, 2) + Math.pow( y - location.y, 2));
-            if( dist < lowestDist ){
-                lowestDist = dist
-                this.closestPont = points[p];
+
+        if(cells.length != null){
+
+            for(let i = 0; i < cells.length; i++){
+                let cell = cells[i];
+                let cellCenter = cell.centerPoint;
+
+                let dist = Math.sqrt( Math.pow(cellCenter[0] - location.x, 2) + Math.pow( cellCenter[1] - location.y, 2));
+                if(dist < lowestDist){
+                    lowestDist = dist;
+                    this.closestPoint = cell;
+                }
             }
-        }
 
+        }
     }
 
     getGlobalMousePosition(event){
@@ -73,7 +79,6 @@ export default class canvasHandler {
             x: (loc.x - this.view.x) / this.view.zoom,
             y: (loc.y - this.view.y) / this.view.zoom,
         }
-        console.log("Global: ", glob);
         return glob;
     }
 
@@ -172,8 +177,6 @@ export default class canvasHandler {
         this.ctx.translate(this.view.x, this.view.y);
         this.ctx.scale(this.view.zoom, this.view.zoom);
         this.ctx.clearRect(-this.view.x / this.view.zoom, -this.view.y / this.view.zoom, this.canvas.width / this.view.zoom, this.canvas.height / this.view.zoom);
-
-
         this.drawMap();
         this.ctx.restore();
         requestAnimationFrame(this.draw.bind(this));
@@ -196,7 +199,6 @@ export default class canvasHandler {
             // Get cells that are within display
             this.map.voronoi.setDisplay(display);
             let renderCells = this.map.getCells(display);
-
             this.map.voronoi.renderMap(renderCells, this.ctx);
 
 
@@ -215,10 +217,22 @@ export default class canvasHandler {
             let [x, y] = points[p];
             if( !this.map.voronoi.outOfRange(x) ){
                 this.ctx.beginPath();
-                if( points[p] == this.closestPont){
-                    this.ctx.fillStyle = "orange";
-                } else {
-                    this.ctx.fillStyle = "#8367C7";
+
+                this.ctx.fillStyle = "#8367C7";
+                if(this.closestPoint != null){
+                    console.log(this.closestPoint);
+                    if(points[p] == this.closestPoint.centerPoint) {
+                        this.ctx.fillStyle = "orange";
+
+                        // Also get corners and draw them.
+                        let corners = this.closestPoint.cellPoints;
+                        for(let p = 0; p < corners.length; p+=2){
+                            let x = corners[p];
+                            let y = corners[p + 1];
+                            this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
+
+                        }
+                    }
                 }
                 this.ctx.strokeText(( Math.floor(x) + " " + Math.floor(y)), x + 2, y - 12);
                 this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
