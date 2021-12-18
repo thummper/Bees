@@ -52,21 +52,16 @@ export default class canvasHandler {
         let lowestDist   = Infinity;
         this.closestCell = null;
         let cells        = this.map.cells;
-
-
         if(cells.length != null){
-
             for(let i = 0; i < cells.length; i++){
                 let cell = cells[i];
                 let cellCenter = cell.centerPoint;
-
                 let dist = Math.sqrt( Math.pow(cellCenter[0] - location.x, 2) + Math.pow( cellCenter[1] - location.y, 2));
                 if(dist < lowestDist){
                     lowestDist = dist;
                     this.closestCell = cell;
                 }
             }
-
         }
     }
 
@@ -199,34 +194,48 @@ export default class canvasHandler {
         }
     }
 
-    drawCenters(cells){
-        // Draw centers of input cells
 
-        for(let i = 0; i < cells.length; i++){
+    drawCircle(x, y){
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.closePath();
+    }
+
+    drawCenters(cells){
+        // Draw centers of all visible cells
+        let closestVisible = false
+        for(let i = 0; i < cells.length; i++) {
             let c = cells[i];
             let [x, y] = c.centerPoint;
             this.ctx.fillStyle = "orange";
             // If current cell is focused, draw it's corners and highlight the center
             if(this.closestCell != null && this.closestCell == c) {
-                this.ctx.fillStyle = "#8367C7";
-                let corners = this.closestCell.cellPoints;
-                for(let p = 0; p < corners.length; p+=2){
-                    let x = corners[p];
-                    let y = corners[p + 1];
-                    this.ctx.beginPath();
-                    this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                    this.ctx.fill();
-                    this.ctx.closePath();
-
-                }
-                this.ctx.fillStyle = "pink";
+                closestVisible = true;
             }
+            this.drawCircle(x, y);
+        }
 
-            this.ctx.beginPath();
-            this.ctx.strokeText(( Math.floor(x) + " " + Math.floor(y)), x + 2, y - 12);
-            this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
-            this.ctx.fill();
-            this.ctx.closePath();
+        if(closestVisible) {
+            // Draw over previous stuff (bad? not too bad? not sure)
+            let cell = this.closestCell;
+            // Draw center
+            this.ctx.fillStyle = "pink";
+            this.drawCircle(cell.centerPoint[0], cell.centerPoint[1]);
+            // Also draw centers of corners
+            this.ctx.fillStyle = "red";
+            let corners = cell.corners;
+            for(let i in corners) {
+                let corner = corners[i];
+                this.drawCircle(corner.x, corner.y);
+            }
+            // Also draw neighbours of this cell in different colour (don't care if visible really)
+            this.ctx.fillStyle = "black";
+            let neighbours = cell.neighbours;
+            for(let n in neighbours){
+                let neighbour = neighbours[n];
+                this.drawCircle(neighbour.centerPoint[0], neighbour.centerPoint[1]);
+            }
         }
 
     }

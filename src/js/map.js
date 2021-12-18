@@ -2,7 +2,7 @@ const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
 
 import customVoronoi from './custom_voronoi.js';
-import MapLocation from './mapLocation.js';
+import {MapLocation, Corner} from './mapLocation.js';
 
 export default class Map {
     constructor(options){
@@ -13,6 +13,8 @@ export default class Map {
         this.width  = options.width;
         this.height = options.height;
         this.numPoints = options.numPoints;
+
+        this.cornerMap = [];
 
         this.points    = [];
         this.cells     = [];
@@ -28,6 +30,14 @@ export default class Map {
         this.generatePoints();
         this.generateVoronoi();
         this.relaxMap();
+
+
+        let c1 = new MapLocation([], [10, 20]);
+        let c2 = new MapLocation([], [10, 20]);
+
+
+
+
     }
     initRandom(){
         this.randomGen = SeedRandom(this.seed);
@@ -47,10 +57,12 @@ export default class Map {
         this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
         // Get all information about cells (afaik d3 does not store this innately?)
         this.determineCells();
+        this.createCellCorners();
+        this.attachCellNeighbours();
     }
 
-    // Make data structure that contains cells.
-    determineCells(){
+    // Gets information about individual cells - don't think D3 does this innately?
+    determineCells() {
         for(let i = 0; i < this.numPoints; i++){
             let cellPoints  = this.voronoi.getCell(i);
             let centerPoint = this.points[i];
@@ -58,13 +70,66 @@ export default class Map {
             this.cells.push(location);
         }
         console.log("Made cells: ", this.cells.length);
+    }
 
+    // Create cell corners here so they are unique?
+    createCellCorners(){
+        for(let i = 0; i < this.cells.length; i++) {
+            let cell = this.cells[i];
+            let cornerPoints = cell.cellPoints;
+
+            // Loop through corner points.
+            for(let j = 0; j < cornerPoints.length; j+=2) {
+                let x = cornerPoints[j];
+                let y = cornerPoints[j+1];
+                let cornerName = x.toString() + y.toString();
+                // Corner has not been created before
+                if(!(cornerName in this.cornerMap)){
+                    let corner   = new Corner(x, y);
+                    cell.corners.push(corner);
+                    this.cornerMap[cornerName] = corner;
+                } else {
+                    // Corner has already been created.
+                    cell.corners.push( this.cornerMap[cornerName]);
+                }
+            }
+
+        }
+        console.log(this.cornerMap);
+    }
+
+    // Given cells, attach neighbours to each other?
+    attachCellNeighbours() {
+
+        let cells = this.cells;
+        let cellLength = cells.length;
+        console.log(cells);
+        // For each cell
+        for(let c = 0; c < cellLength; c++) {
+            let cell = cells[c];
+            // Check all other cells (nested loop though?)
+            for(let d = 0; d < cellLength; d++) {
+                // Compare cells that are not c
+                if(d != c){
+                    let testCell = cells[d];
+                    // If test cell shares any corner with cell, it is a neighbour of cell and cell is a neighbour of test cell.
+                    if(cell.isNeighbour(testCell)){
+
+                        // Assign cell as neighbour.
+                        cell.addNeighbour(testCell);
+                        testCell.addNeighbour(cell);
+                    } else {
+
+                    }
+                }
+            }
+        }
     }
 
     resetVoronoi(){
         this.delaunay = null;
         this.voronoi  = null;
-        this.cells = []
+        this.cells    = []
         this.generateVoronoi();
     }
 
