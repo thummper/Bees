@@ -79,7 +79,9 @@ export default class Map {
             let cell = this.cells[i];
             let cornerPoints = cell.cellPoints;
 
-            // Loop through corner points.
+            let tempCorners  = [];
+            // Might do two loops to help my small loop
+            // #1 - Create all corners and also add them to a temp array
             for(let j = 0; j < cornerPoints.length; j+=2) {
                 let x = cornerPoints[j];
                 let y = cornerPoints[j+1];
@@ -89,11 +91,37 @@ export default class Map {
                     let corner   = new Corner(x, y);
                     cell.corners.push(corner);
                     this.cornerMap[cornerName] = corner;
+                    // Also push to temp corners
+                    tempCorners.push(corner);
+
                 } else {
                     // Corner has already been created.
                     cell.corners.push( this.cornerMap[cornerName]);
+                    tempCorners.push(this.cornerMap[cornerName]);
                 }
             }
+
+            // #2 - Loop through corners and add appropriate connections
+            // Basically corner n connects to n-1 and n+1, result of sum will wrap to start / end of array
+            for(let j = 0; j < tempCorners.length; j++) {
+                // Get current corner
+                let corner = tempCorners[j];
+                // This corner connects to the next corner
+                let nextInd = j + 1;
+                let lastInd = j - 1;
+                // Make indices wrap
+                if(nextInd >= tempCorners.length) {
+                    nextInd = 0;
+                }
+                if(lastInd < 0){
+                    lastInd = tempCorners.length - 1;
+                }
+
+                corner.addConnection( tempCorners[lastInd] );
+                corner.addConnection( tempCorners[nextInd] );
+            }
+
+
 
         }
         console.log(this.cornerMap);

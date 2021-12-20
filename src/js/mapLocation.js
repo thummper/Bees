@@ -50,7 +50,15 @@ class Corner {
     constructor(xpos, ypos) {
         this.x = xpos;
         this.y = ypos;
+        // Store corner connections
+        this.connections = [];
         // TODO: Altitude, rivers.
+    }
+
+    addConnection(corner) {
+        if(!this.connections.includes(corner)) {
+            this.connections.push(corner);
+        }
     }
 }
 
