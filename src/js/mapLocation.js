@@ -57,7 +57,7 @@ class Corner {
 
     addConnection(corner) {
         if(!this.connections.includes(corner)) {
-            this.connections.push(corner);
+            this.connections.push( {"corner": corner, "colour": randomColour({ hue: 'purple'})});
         }
     }
 }

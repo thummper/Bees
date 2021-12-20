@@ -1,12 +1,12 @@
 const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
 
-import customVoronoi from './custom_voronoi.js';
+import customVoronoi from './customVoronoi.js';
 import {MapLocation, Corner} from './mapLocation.js';
 
 export default class Map {
     constructor(options) {
-        // Vars
+        // General map vars
         this.seed   = options.seed;
         this.startX = options.x;
         this.startY = options.y;
@@ -21,11 +21,11 @@ export default class Map {
         this.randomGen = null;
         this.delaunay  = null;
         this.voronoi   = null;
-
+        // Control Lloyd relaxation
         this.relaxCounter = 0;
         this.maxRelax     = 1;
 
-        // Important
+        // Important - generate the map!
         this.initRandom();
         this.generateMap();
     }
@@ -120,11 +120,7 @@ export default class Map {
                 corner.addConnection( tempCorners[lastInd] );
                 corner.addConnection( tempCorners[nextInd] );
             }
-
-
-
         }
-        console.log(this.cornerMap);
     }
 
     // Loops through cells, finds their neighbours and attaches them

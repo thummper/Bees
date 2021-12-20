@@ -1,4 +1,5 @@
 // import { tychei } from "seedrandom";
+const randomColour = require('randomcolor');
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
 
@@ -202,7 +203,7 @@ export default class canvasHandler {
         this.ctx.closePath();
     }
 
-    drawCenters(cells){
+    drawCenters(cells) {
         // Draw centers of all visible cells
         let closestVisible = false
         for(let i = 0; i < cells.length; i++) {
@@ -215,27 +216,64 @@ export default class canvasHandler {
             }
             this.drawCircle(x, y);
         }
-
+        // Not sure if I like this check
         if(closestVisible) {
-            // Draw over previous stuff (bad? not too bad? not sure)
+            this.drawFocused();
+        }
+    }
+
+    // Debug drawing for currently focused cell.
+    drawFocused() {
+            // Currently this just draws over previous stuff
+
             let cell = this.closestCell;
-            // Draw center
+            // Draw cell center
             this.ctx.fillStyle = "pink";
             this.drawCircle(cell.centerPoint[0], cell.centerPoint[1]);
-            // Also draw centers of corners
+
+            // Also draw corners
             this.ctx.fillStyle = "red";
             let corners = cell.corners;
             for(let i in corners) {
                 let corner = corners[i];
                 this.drawCircle(corner.x, corner.y);
             }
-            // Also draw neighbours of this cell in different colour (don't care if visible really)
+
+            // Draw connections between corners
+            for(let i in corners) {
+                let corner = corners[i];
+                let cornerConnections = corner.connections;
+                if(cornerConnections.length > 0){
+                    this.drawCornerConnections(corner, cornerConnections)
+                }
+            }
+
+            // Also draw neighbours of cell
             this.ctx.fillStyle = "black";
             let neighbours = cell.neighbours;
             for(let n in neighbours){
                 let neighbour = neighbours[n];
                 this.drawCircle(neighbour.centerPoint[0], neighbour.centerPoint[1]);
             }
+    }
+
+    // Draw corner connections
+    drawCornerConnections(corner, cornerConnections) {
+        for(let i = 0; i < cornerConnections.length; i++) {
+            let connection = cornerConnections[i];
+            let conCorner  = connection['corner'];
+            let colour     = connection['colour'];
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.moveTo(corner.x, corner.y);
+            this.ctx.lineTo(conCorner.x, conCorner.y);
+            this.ctx.closePath();
+            // Random colour for each corner
+            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = colour;
+            this.ctx.stroke();
+            this.ctx.restore();
+
         }
 
     }
