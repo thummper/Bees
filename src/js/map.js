@@ -5,7 +5,7 @@ import customVoronoi from './custom_voronoi.js';
 import {MapLocation, Corner} from './mapLocation.js';
 
 export default class Map {
-    constructor(options){
+    constructor(options) {
         // Vars
         this.seed   = options.seed;
         this.startX = options.x;
@@ -14,10 +14,10 @@ export default class Map {
         this.height = options.height;
         this.numPoints = options.numPoints;
 
-        this.cornerMap = [];
 
         this.points    = [];
         this.cells     = [];
+        this.cornerMap = [];
         this.randomGen = null;
         this.delaunay  = null;
         this.voronoi   = null;
@@ -27,52 +27,53 @@ export default class Map {
 
         // Important
         this.initRandom();
-        this.generatePoints();
-        this.generateVoronoi();
-        this.relaxMap();
-
-
-        let c1 = new MapLocation([], [10, 20]);
-        let c2 = new MapLocation([], [10, 20]);
-
-
-
-
+        this.generateMap();
     }
+
+    // Get random seed for points
     initRandom(){
         this.randomGen = SeedRandom(this.seed);
     }
 
-    generatePoints(){
+    generatePoints() {
         for(let i = 0; i < this.numPoints; i++){
             let rx = this.randomGen() * (this.width - this.startX) + this.startX;
             let ry = this.randomGen() * (this.height - this.startY) + this.startY;
-
             this.points.push([rx, ry]);
         }
     }
 
-    generateVoronoi(){
-        this.delaunay = Delaunay.from(this.points);
-        this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
-        // Get all information about cells (afaik d3 does not store this innately?)
-        this.determineCells();
+    // General function call to generate map
+    generateMap() {
+        // Generate points
+        this.generatePoints();
+        // Generate 1st map
+        this.generateVoronoi();
+        // Relax the map
+        this.relaxMap();
+        // Now we have final map
         this.createCellCorners();
         this.attachCellNeighbours();
     }
 
-    // Gets information about individual cells - don't think D3 does this innately?
-    determineCells() {
-        for(let i = 0; i < this.numPoints; i++){
+    generateVoronoi() {
+        this.delaunay = Delaunay.from(this.points);
+        this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
+        // Relaxation needs cells, so keeping this function here.
+        this.generateCells();
+    }
+
+    // Generate a list of cells
+    generateCells() {
+        for(let i = 0; i < this.numPoints; i++) {
             let cellPoints  = this.voronoi.getCell(i);
             let centerPoint = this.points[i];
             let location = new MapLocation(cellPoints, centerPoint);
             this.cells.push(location);
         }
-        console.log("Made cells: ", this.cells.length);
     }
 
-    // Create cell corners here so they are unique?
+    // Create all cell corners here, making sure they are unique
     createCellCorners(){
         for(let i = 0; i < this.cells.length; i++) {
             let cell = this.cells[i];
@@ -98,9 +99,8 @@ export default class Map {
         console.log(this.cornerMap);
     }
 
-    // Given cells, attach neighbours to each other?
+    // Loops through cells, finds their neighbours and attaches them
     attachCellNeighbours() {
-
         let cells = this.cells;
         let cellLength = cells.length;
         console.log(cells);
@@ -114,12 +114,9 @@ export default class Map {
                     let testCell = cells[d];
                     // If test cell shares any corner with cell, it is a neighbour of cell and cell is a neighbour of test cell.
                     if(cell.isNeighbour(testCell)){
-
                         // Assign cell as neighbour.
                         cell.addNeighbour(testCell);
                         testCell.addNeighbour(cell);
-                    } else {
-
                     }
                 }
             }
@@ -129,14 +126,16 @@ export default class Map {
     resetVoronoi(){
         this.delaunay = null;
         this.voronoi  = null;
-        this.cells    = []
-        this.generateVoronoi();
+        this.cells     = [];
+        this.cornerMap = [];
     }
 
+    // Apply lloyd relaxation iteratively
     relaxMap(){
         while(this.relaxCounter < this.maxRelax){
             this.lloydRelaxation();
             this.resetVoronoi();
+            this.generateVoronoi();
             this.relaxCounter += 1;
         }
     }

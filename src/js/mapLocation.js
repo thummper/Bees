@@ -7,9 +7,6 @@ class MapLocation {
         this.colour      = randomColour({ hue: 'red'});
         this.corners     = [];
         this.neighbours  = [];
-
-
-
     }
 
     // Add neighbour
