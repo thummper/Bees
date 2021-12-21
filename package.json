@@ -11,14 +11,18 @@
   "license": "ISC",
   "dependencies": {
     "css-loader": "^5.2.4",
+    "d3-color": "^3.0.1",
     "d3-delaunay": "^6.0.2",
+    "d3-interpolate": "^3.0.1",
     "install": "^0.13.0",
     "leaflet": "^1.7.1",
+    "nanocolor-hsl": "^1.2.0",
     "postcss-loader": "^5.3.0",
     "randomcolor": "^0.6.2",
     "sass": "^1.32.13",
     "sass-loader": "^11.1.1",
     "seedrandom": "^3.0.5",
+    "simplex-noise": "^3.0.0",
     "voronoi": "^1.0.0"
   },
   "devDependencies": {

@@ -47,12 +47,14 @@ export default class customVoronoi extends Voronoi {
     renderMap(cells, ctx){
         for( let i = 0; i < cells.length; i++){
             let cell = cells[i];
+
             this.drawCell(cell.cellPoints, ctx, cell.colour);
         }
     }
 
 
     drawCell(points, ctx, fill = "black"){
+
         ctx.beginPath();
         ctx.moveTo(points[0], points[1]);
         let n = points.length;
@@ -64,6 +66,7 @@ export default class customVoronoi extends Voronoi {
         ctx.closePath();
         ctx.fillStyle = fill;
         ctx.fill();
+
     }
 
 }

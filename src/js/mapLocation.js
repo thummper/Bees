@@ -7,6 +7,19 @@ class MapLocation {
         this.colour      = randomColour({ hue: 'red'});
         this.corners     = [];
         this.neighbours  = [];
+
+        // Terrain vars
+        this.height = null;
+        this.normHeight = null;
+        this.biome      = null;
+    }
+
+    // TODO: temp? Temp biome set
+    setBiome(biome) {
+        this.biome = biome;
+        if(biome == "water") {
+            this.colour = randomColour({ luminosity: "dark", hue: 'blue'});
+        }
     }
 
     // Add neighbour
@@ -53,6 +66,8 @@ class Corner {
         // Store corner connections
         this.connections = [];
         // TODO: Altitude, rivers.
+        // Terrain information
+        this.height = null;
     }
 
     addConnection(corner) {

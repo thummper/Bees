@@ -3,7 +3,13 @@ const SeedRandom = require('seedrandom');
 
 import customVoronoi from './customVoronoi.js';
 import {MapLocation, Corner} from './mapLocation.js';
+import SimplexNoise from 'simplex-noise';
 
+
+
+const d3 = require('d3-color');
+const dint = require('d3-interpolate');
+const randomColour = require('randomcolor');
 export default class Map {
     constructor(options) {
         // General map vars
@@ -21,17 +27,35 @@ export default class Map {
         this.randomGen = null;
         this.delaunay  = null;
         this.voronoi   = null;
+        this.simplex   = null;
         // Control Lloyd relaxation
         this.relaxCounter = 0;
         this.maxRelax     = 1;
+        // Terrain information
+        this.lowestHeight  = null;
+        this.highestHeight = null;
+        this.seaLevel      = null;
+        this.biomeColours  = {};
 
         // Important - generate the map!
         this.initRandom();
+        this.initSimplex();
+        this.initBiomeColours();
         this.generateMap();
     }
 
+    initBiomeColours(){
+        this.biomeColours['land'] = d3.hsl(randomColour({ hue : 'red', luminosity: 'dark'}));
+        console.log(this.biomeColours);
+    }
+
+    initSimplex() {
+        // Expensive to run this?
+        this.simplex = new SimplexNoise(this.seed);
+    }
+
     // Get random seed for points
-    initRandom(){
+    initRandom() {
         this.randomGen = SeedRandom(this.seed);
     }
 
@@ -54,6 +78,8 @@ export default class Map {
         // Now we have final map
         this.createCellCorners();
         this.attachCellNeighbours();
+        // Attach height values to corners
+        this.giveCornerHeight();
     }
 
     generateVoronoi() {
@@ -73,8 +99,80 @@ export default class Map {
         }
     }
 
+    // Give corners height values
+    giveCornerHeight() {
+        // Loop though all corners
+        let lowestHeight  = Infinity;
+        let highestHeight = 0;
+        if(this.cornerMap.length > 0) {
+            for(let key in this.cornerMap) {
+                let corner = this.cornerMap[key];
+                let height = this.simplex.noise2D(corner.x / 8000, corner.y / 8000);
+                corner.height = height;
+
+                if(height > highestHeight) {
+                    highestHeight = height;
+                }
+                if(height < lowestHeight) {
+                    lowestHeight = height;
+                }
+
+            }
+            // Normalise colour
+            for(let key in this.cornerMap) {
+                let corner = this.cornerMap[key];
+                let normHeight = (corner.height - lowestHeight) / (highestHeight - lowestHeight);
+                corner.normHeight = normHeight;
+            }
+        }
+        this.lowestHeight  = lowestHeight;
+        this.highestHeight = highestHeight;
+
+        // let range = ((Math.abs(lowestHeight) + Math.abs(highestHeight)) * 0.35);
+        // console.log(" RANGE: ", range);
+        // this.seaLevel = lowestHeight + range;
+        // console.log("Lowest: ", lowestHeight, " Highest: ", highestHeight, " Sea level: ", this.seaLevel);
+        this.seaLevel = 0.35;
+        this.giveCellsHeight();
+    }
+
+    // Given that corners have height values, the height value of a cell will be given by averaging the corner vals
+    giveCellsHeight() {
+        for(let i = 0; i < this.cells.length; i++) {
+            let cell = this.cells[i];
+            let corners = cell.corners;
+            let heightTotal = 0;
+            for(let j = 0; j < corners.length; j++) {
+                heightTotal += corners[j].height;
+            }
+            let heightAverage = heightTotal / corners.length;
+            cell.height = (heightAverage - this.lowestHeight) / (this.highestHeight - this.lowestHeight);
+
+            if(cell.height <= this.seaLevel) {
+                // Scale again
+                cell.height = (cell.height) / (this.seaLevel);
+
+                this.setCellBiome(cell, "water");
+
+            } else {
+                cell.height = (cell.height - this.seaLevel) / (1 - this.seaLevel);
+                this.setCellBiome(cell, "land");
+            }
+        }
+    }
+
+    // Set cell biome
+    setCellBiome(cell, biome){
+        cell.setBiome(biome);
+        if(biome == "land") {
+            cell.colour = dint.interpolateRgb("red", "orange")(cell.height);
+        } else {
+            cell.colour = dint.interpolateRgb("blue", "black")(cell.height);
+        }
+    }
+
     // Create all cell corners here, making sure they are unique
-    createCellCorners(){
+    createCellCorners() {
         for(let i = 0; i < this.cells.length; i++) {
             let cell = this.cells[i];
             let cornerPoints = cell.cellPoints;

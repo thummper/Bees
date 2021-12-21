@@ -230,6 +230,7 @@ export default class canvasHandler {
             // Draw cell center
             this.ctx.fillStyle = "pink";
             this.drawCircle(cell.centerPoint[0], cell.centerPoint[1]);
+            this.ctx.strokeText(cell.height.toString(), cell.centerPoint[0], cell.centerPoint[1]);
 
             // Also draw corners
             this.ctx.fillStyle = "red";
@@ -238,23 +239,27 @@ export default class canvasHandler {
                 let corner = corners[i];
                 this.drawCircle(corner.x, corner.y);
             }
-
             // Draw connections between corners
             for(let i in corners) {
                 let corner = corners[i];
                 let cornerConnections = corner.connections;
                 if(cornerConnections.length > 0){
-                    this.drawCornerConnections(corner, cornerConnections)
+                    this.drawCornerConnections(corner, cornerConnections);
+                    this.drawCornerHeight(corner);
                 }
             }
-
             // Also draw neighbours of cell
             this.ctx.fillStyle = "black";
             let neighbours = cell.neighbours;
-            for(let n in neighbours){
+            for(let n in neighbours) {
                 let neighbour = neighbours[n];
                 this.drawCircle(neighbour.centerPoint[0], neighbour.centerPoint[1]);
             }
+    }
+
+    //Stroke text for corner height
+    drawCornerHeight(corner) {
+        this.ctx.strokeText( corner.height.toString(), corner.x, corner.y);
     }
 
     // Draw corner connections
