@@ -51,7 +51,7 @@ export default class Map {
 
     initSimplex() {
         // Expensive to run this?
-        this.simplex = new SimplexNoise(this.seed);
+        this.simplex = new SimplexNoise();
     }
 
     // Get random seed for points
@@ -165,9 +165,9 @@ export default class Map {
     setCellBiome(cell, biome){
         cell.setBiome(biome);
         if(biome == "land") {
-            cell.colour = dint.interpolateRgb("red", "orange")(cell.height);
+            cell.colour = dint.interpolateRgb("goldenrod", "darkgoldenrod")(cell.height);
         } else {
-            cell.colour = dint.interpolateRgb("blue", "black")(cell.height);
+            cell.colour = dint.interpolateRgb("dodgerblue", "deepskyblue")(cell.height);
         }
     }
 
