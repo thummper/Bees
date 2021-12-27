@@ -109,7 +109,6 @@ export default class Map {
                 let corner = this.cornerMap[key];
                 let height = this.simplex.noise2D(corner.x / 8000, corner.y / 8000);
                 corner.height = height;
-
                 if(height > highestHeight) {
                     highestHeight = height;
                 }
@@ -178,15 +177,28 @@ export default class Map {
             let cornerPoints = cell.cellPoints;
 
             let tempCorners  = [];
+            // TODO: refactor
+
             // Might do two loops to help my small loop
             // #1 - Create all corners and also add them to a temp array
             for(let j = 0; j < cornerPoints.length; j+=2) {
+                let edge = false;
                 let x = cornerPoints[j];
                 let y = cornerPoints[j+1];
+
+                if(x <= this.startX || x >= this.width || y <= this.startY || y >= this.height) {
+                    // console.log("Edge corner");
+                    edge = true;
+                }
+
+                // Logic to detect if the corner is on a boundary?
                 let cornerName = x.toString() + y.toString();
                 // Corner has not been created before
                 if(!(cornerName in this.cornerMap)){
                     let corner   = new Corner(x, y);
+                    if(edge){
+                        corner.edge = true;
+                    }
                     cell.corners.push(corner);
                     this.cornerMap[cornerName] = corner;
                     // Also push to temp corners

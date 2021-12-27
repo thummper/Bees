@@ -17,11 +17,10 @@ export default class canvasHandler {
         this.trackedMousePos = null;
         this.closestCell = null;
 
-        this.view = {
-            x: 0,
-            y: 0,
-            zoom: 1
-        };
+        this.trackedKey = null;
+        this.keySens = 10;
+
+
 
         this.viewPos = {
             prevX: null,
@@ -33,6 +32,11 @@ export default class canvasHandler {
         // Call functions
         // Make sure canvas is the correct size
         this.windowResize();
+        this.view = {
+            x: this.canvas.width / 2.5,
+            y: this.canvas.height / 2.5,
+            zoom: 0.05
+        };
         // Register important event listeners
         this.registerListeners();
         // Start drawing loop.
@@ -46,6 +50,50 @@ export default class canvasHandler {
         this.canvas.addEventListener('mouseup', this.pointerUp.bind(this));
         this.canvas.addEventListener('mousemove', this.pointerMove.bind(this));
         this.canvas.addEventListener('wheel', this.mouseWheel.bind(this));
+        document.addEventListener('keydown', this.keydown.bind(this));
+        document.addEventListener('keyup', this.keyup.bind(this));
+    }
+
+    keyup(event) {
+        console.log("key released");
+    }
+
+    // Track keypresses for keyboard navigation
+    keydown(event) {
+        let code = event.code;
+        console.log("Code: ", code);
+        switch(code){
+            case "KeyW":
+                // Pan up
+                this.moveView(0, -this.keySens);
+                break;
+            case "KeyS":
+                // Pan down
+                this.moveView(0, this.keySens);
+                break;
+            case "KeyA":
+                // Pan left
+                this.moveView(this.keySens, 0);
+                break;
+            case "KeyD":
+                // Pan right
+                this.moveView(-this.keySens, 0);
+                break;
+            case "Equal":
+                // Zoom in
+                this.keyWheel(0.05);
+                break;
+            case "Minus":
+                // Zoom out
+                this.keyWheel(-0.05);
+        }
+
+    }
+
+    moveView(x, y) {
+        console.log("Moving: ", x, y);
+        this.view.x += x;
+        this.view.y -= y;
     }
 
     getClosestCenter(location){
@@ -127,6 +175,24 @@ export default class canvasHandler {
         }
     }
 
+    adjustZoom(zoom) {
+        this.view.zoom += zoom;
+        this.view.zoom = Math.max(this.minZoom, this.view.zoom);
+        this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
+    }
+
+    keyWheel(val){
+        let zoom = 1 * val * this.zoomSensitivity;
+        let wx = (this.canvas.width / 2) / (this.canvas.width * this.view.zoom);
+        let wy = (this.canvas.height / 2) / (this.canvas.height * this.view.zoom);
+
+        this.view.x -= wx * this.canvas.width * zoom;
+        this.view.y -= wy * this.canvas.height * zoom;
+
+        this.adjustZoom(zoom);
+
+    }
+
 
     // Mouse wheel
     mouseWheel(event) {
@@ -138,9 +204,8 @@ export default class canvasHandler {
         let wy  = ( pos.y - this.view.y ) / ( this.canvas.height * this.view.zoom );
         this.view.x -= wx * this.canvas.width * zoom;
         this.view.y -= wy * this.canvas.height * zoom;
-        this.view.zoom += zoom;
-        this.view.zoom = Math.max(this.minZoom, this.view.zoom);
-        this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
+        this.adjustZoom(zoom);
+
     }
 
     // Call this to make sure client canvas size matches context, changes when the window resizes (canvas uses % vals for w/h)
@@ -155,6 +220,7 @@ export default class canvasHandler {
         if(this.map == null) {
             console.log("First time map has been attached. ");
             this.map = map;
+            console.log("Map: ", map);
         } else {
             console.log("Map is being replaced. ");
             this.map = map;
@@ -169,9 +235,11 @@ export default class canvasHandler {
         this.ctx.translate(this.view.x, this.view.y);
         this.ctx.scale(this.view.zoom, this.view.zoom);
         this.drawMap();
+        this.drawDebug();
         this.ctx.restore();
         requestAnimationFrame(this.draw.bind(this));
     }
+
 
     // Draw map
     drawMap() {
@@ -192,6 +260,21 @@ export default class canvasHandler {
             this.map.voronoi.renderMap(visibleCells, this.ctx);
             this.drawCenters(visibleCells);
             // this.map.voronoi.render(this.ctx, display);
+        }
+    }
+
+    // In progress debug function
+    drawDebug() {
+        if(this.map != null) {
+            let corners = this.map.cornerMap;
+            for(let key in corners) {
+                let corner = corners[key];
+                if(corner.edge) {
+                    this.ctx.fillStyle = "cyan";
+                    this.drawCircle(corner.x, corner.y);
+
+                }
+            }
         }
     }
 
