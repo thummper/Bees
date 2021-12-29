@@ -18,7 +18,7 @@ export default class canvasHandler {
         this.closestCell = null;
 
         this.trackedKey = null;
-        this.keySens = 10;
+        this.keySens = 20;
 
 
 
@@ -61,7 +61,6 @@ export default class canvasHandler {
     // Track keypresses for keyboard navigation
     keydown(event) {
         let code = event.code;
-        console.log("Code: ", code);
         switch(code){
             case "KeyW":
                 // Pan up
@@ -81,22 +80,20 @@ export default class canvasHandler {
                 break;
             case "Equal":
                 // Zoom in
-                this.keyWheel(0.05);
+                this.keyWheel(this.keySens / 100);
                 break;
             case "Minus":
                 // Zoom out
-                this.keyWheel(-0.05);
+                this.keyWheel(-this.keySens / 100);
         }
-
     }
 
     moveView(x, y) {
-        console.log("Moving: ", x, y);
         this.view.x += x;
         this.view.y -= y;
     }
 
-    getClosestCenter(location){
+    getClosestCenter(location) {
         // Loop through map cells instead of points so we can get the whole cell
         let lowestDist   = Infinity;
         this.closestCell = null;
@@ -313,7 +310,8 @@ export default class canvasHandler {
             // Draw cell center
             this.ctx.fillStyle = "pink";
             this.drawCircle(cell.centerPoint[0], cell.centerPoint[1]);
-            this.ctx.strokeText(cell.height.toString(), cell.centerPoint[0], cell.centerPoint[1]);
+
+            // this.ctx.strokeText(cell.height.toString(), cell.centerPoint[0], cell.centerPoint[1]);
 
             // Also draw corners
             this.ctx.fillStyle = "red";
@@ -342,7 +340,7 @@ export default class canvasHandler {
 
     //Stroke text for corner height
     drawCornerHeight(corner) {
-        this.ctx.strokeText( corner.height.toString(), corner.x, corner.y);
+        // this.ctx.strokeText( corner.height.toString(), corner.x, corner.y);
     }
 
     // Draw corner connections

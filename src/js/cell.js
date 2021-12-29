@@ -1,15 +1,17 @@
 const randomColour = require('randomcolor');
 
-class MapLocation {
+class Cell {
     constructor(cellPoints, centerPoint) {
+        this.x = centerPoint[0];
+        this.y = centerPoint[1];
         this.cellPoints  = cellPoints;
         this.centerPoint = centerPoint;
-        this.colour      = randomColour({ hue: 'red'});
+        this.colour      = "black";
         this.corners     = [];
         this.neighbours  = [];
 
         // Terrain vars
-        this.height = null;
+        this.height     = null;
         this.normHeight = null;
         this.biome      = null;
     }
@@ -17,9 +19,6 @@ class MapLocation {
     // TODO: temp? Temp biome set
     setBiome(biome) {
         this.biome = biome;
-        if(biome == "water") {
-            this.colour = randomColour({ luminosity: "dark", hue: 'blue'});
-        }
     }
 
     // Add neighbour
@@ -29,7 +28,7 @@ class MapLocation {
         }
     }
 
-    // Given a test cell, check if there are any matching corners
+    // Test if cell is neighbour of this cell
     isNeighbour(testCell) {
         let testCorners    = testCell.corners;
         let currentCorners = this.corners;
@@ -40,7 +39,7 @@ class MapLocation {
             for(let j = 0; j < testCorners.length; j++) {
                 let testCorner = testCorners[j];
                 // If any match, testCell is a neighbour
-                if(corner == testCorner){
+                if(corner == testCorner) {
                     return true;
                 }
             }
@@ -65,6 +64,8 @@ class Corner {
         this.y = ypos;
         // Store corner connections
         this.connections = [];
+        // Cells that own this corner
+        this.cells       = [];
         // TODO: Altitude, rivers.
         // Terrain information
         this.height = null;
@@ -75,6 +76,11 @@ class Corner {
             this.connections.push( {"corner": corner, "colour": randomColour({ hue: 'purple'})});
         }
     }
+    addCell(cell) {
+        if(!this.cells.includes(cell)) {
+            this.cells.push(cell);
+        }
+    }
 }
 
-module.exports = {MapLocation, Corner};
+module.exports = {Cell, Corner};

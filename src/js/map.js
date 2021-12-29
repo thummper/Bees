@@ -1,9 +1,14 @@
 const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
+const Noise = require('noisejs');
 
 import customVoronoi from './customVoronoi.js';
-import {MapLocation, Corner} from './mapLocation.js';
+import {Cell, Corner} from './cell.js';
+import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
+import Queue from './helper/queue.js';
+import { tychei } from 'seedrandom';
+
 
 
 
@@ -21,13 +26,20 @@ export default class Map {
         this.numPoints = options.numPoints;
 
 
-        this.points    = [];
-        this.cells     = [];
-        this.cornerMap = [];
-        this.randomGen = null;
-        this.delaunay  = null;
-        this.voronoi   = null;
-        this.simplex   = null;
+        this.points     = [];
+        this.cells      = [];
+        this.waterCells = [];
+        this.landCells  = [];
+        this.edgeCells  = [];
+        this.cornerMap  = [];
+
+        this.randomGen  = null;
+        this.delaunay   = null;
+        this.voronoi    = null;
+        this.simplex    = null;
+
+        this.oceanNoise    = null;
+        this.mountainNoise = null;
         // Control Lloyd relaxation
         this.relaxCounter = 0;
         this.maxRelax     = 1;
@@ -36,6 +48,8 @@ export default class Map {
         this.highestHeight = null;
         this.seaLevel      = null;
         this.biomeColours  = {};
+
+        this.colourHandler = new ColourHandler();
 
         // Important - generate the map!
         this.initRandom();
@@ -51,7 +65,9 @@ export default class Map {
 
     initSimplex() {
         // Expensive to run this?
-        this.simplex = new SimplexNoise();
+        this.simplex       = new SimplexNoise();
+        this.oceanNoise    = new SimplexNoise();
+        this.mountainNoise = new SimplexNoise();
     }
 
     // Get random seed for points
@@ -79,7 +95,8 @@ export default class Map {
         this.createCellCorners();
         this.attachCellNeighbours();
         // Attach height values to corners
-        this.giveCornerHeight();
+        // this.giveCornerHeight();
+        this.assignWater();
     }
 
     generateVoronoi() {
@@ -94,9 +111,56 @@ export default class Map {
         for(let i = 0; i < this.numPoints; i++) {
             let cellPoints  = this.voronoi.getCell(i);
             let centerPoint = this.points[i];
-            let location = new MapLocation(cellPoints, centerPoint);
+            let location = new Cell(cellPoints, centerPoint);
             this.cells.push(location);
         }
+    }
+
+    assignWater() {
+        // Use ocean noise to assign water
+        for(let c in this.cells) {
+            let cell = this.cells[c];
+            // Sample noise
+            let nVal = this.oceanNoise.noise2D(cell.x / 5000, cell.y / 5000);
+            if(nVal < 0.05 ) {
+                this.setCellBiome(cell, "water");
+                this.waterCells.push(cell);
+            } else {
+                this.setCellBiome(cell, 'land');
+                this.landCells.push(cell);
+            }
+        }
+        // Once all water has been assigned we need to determine what is ocean / freshwater
+        // Loop through our edge cells:
+        // - If cell is edge:
+        //   - Set biome to ocean
+        //   - Add water neighbours to the queue (if not already in queue?)
+        let edgeCells  = [];
+        for(let c in this.waterCells) {
+            let cell = this.waterCells[c];
+            if(cell.edge) {
+                edgeCells.push(cell);
+            }
+        }
+
+
+        // Everything in waterQueue will be assigned ocean
+        let waterQueue = new Queue(edgeCells);
+        while(waterQueue.length() > 0) {
+            // Get item
+            let cell = waterQueue.dequeue();
+            if(cell.biome == "water") {
+                this.setCellBiome(cell, "ocean");
+                // All water neighbours of this cell will be assigned ocean.
+                let neighbours = cell.neighbours;
+                waterQueue.addElements(neighbours);
+            }
+        }
+
+    }
+
+    assignMountains() {
+        // Use mountain noise to assign mountains
     }
 
     // Give corners height values
@@ -147,27 +211,27 @@ export default class Map {
             let heightAverage = heightTotal / corners.length;
             cell.height = (heightAverage - this.lowestHeight) / (this.highestHeight - this.lowestHeight);
 
-            if(cell.height <= this.seaLevel) {
-                // Scale again
-                cell.height = (cell.height) / (this.seaLevel);
+            // if(cell.height <= this.seaLevel) {
+            //     // Scale again
+            //     cell.height = (cell.height) / (this.seaLevel);
+            //     this.setCellBiome(cell, "water");
 
-                this.setCellBiome(cell, "water");
-
-            } else {
-                cell.height = (cell.height - this.seaLevel) / (1 - this.seaLevel);
-                this.setCellBiome(cell, "land");
-            }
+            // } else {
+            //     cell.height = (cell.height - this.seaLevel) / (1 - this.seaLevel);
+            //     this.setCellBiome(cell, "land");
+            // }
         }
     }
 
     // Set cell biome
     setCellBiome(cell, biome){
         cell.setBiome(biome);
-        if(biome == "land") {
-            cell.colour = dint.interpolateRgb("goldenrod", "darkgoldenrod")(cell.height);
-        } else {
-            cell.colour = dint.interpolateRgb("dodgerblue", "deepskyblue")(cell.height);
-        }
+        this.colourHandler.setColour(cell);
+        // if(biome == "land") {
+        //     cell.colour = dint.interpolateRgb("goldenrod", "darkgoldenrod")(cell.height);
+        // } else {
+        //     cell.colour = dint.interpolateRgb("dodgerblue", "deepskyblue")(cell.height);
+        // }
     }
 
     // Create all cell corners here, making sure they are unique
@@ -178,30 +242,29 @@ export default class Map {
 
             let tempCorners  = [];
             // TODO: refactor
-
             // Might do two loops to help my small loop
             // #1 - Create all corners and also add them to a temp array
             for(let j = 0; j < cornerPoints.length; j+=2) {
                 let edge = false;
                 let x = cornerPoints[j];
                 let y = cornerPoints[j+1];
-
+                // Check if corner is on the edge of the map
                 if(x <= this.startX || x >= this.width || y <= this.startY || y >= this.height) {
                     // console.log("Edge corner");
                     edge = true;
                 }
-
-                // Logic to detect if the corner is on a boundary?
+                // Create key to ensure corner is unique
                 let cornerName = x.toString() + y.toString();
                 // Corner has not been created before
-                if(!(cornerName in this.cornerMap)){
+                if(!(cornerName in this.cornerMap)) {
                     let corner   = new Corner(x, y);
-                    if(edge){
+                    if(edge) {
+                        // Assign edge if edge point
                         corner.edge = true;
+                        cell.edge   = true;
                     }
                     cell.corners.push(corner);
                     this.cornerMap[cornerName] = corner;
-                    // Also push to temp corners
                     tempCorners.push(corner);
 
                 } else {
@@ -257,7 +320,7 @@ export default class Map {
         }
     }
 
-    resetVoronoi(){
+    resetVoronoi() {
         this.delaunay = null;
         this.voronoi  = null;
         this.cells     = [];
@@ -275,9 +338,9 @@ export default class Map {
     }
 
     // Apply Lloyd relaxation to make voronoi cells more uniform (should make a better map)
-    lloydRelaxation(){
+    lloydRelaxation() {
         let newPoints = [];
-        for(let i = 0; i < this.cells.length; i++){
+        for(let i = 0; i < this.cells.length; i++) {
             let cell = this.cells[i];
             let centerPoint = cell.centerPoint;
             let corners     = cell.cellPoints;
@@ -302,11 +365,11 @@ export default class Map {
     }
 
     // Given camera info, get all cells that are on screen
-    getCells(display){
+    getCells(display) {
         let visibleCells = [];
-        for(let i = 0; i < this.cells.length; i++){
+        for(let i = 0; i < this.cells.length; i++) {
             let cell = this.cells[i];
-            if(cell.visible(display, 100)){
+            if(cell.visible(display, 100)) {
                 visibleCells.push(cell);
             }
         }
