@@ -11,9 +11,10 @@ class Cell {
         this.neighbours  = [];
 
         // Terrain vars
-        this.height     = null;
-        this.normHeight = null;
-        this.biome      = null;
+        this.edgeDistance = null;
+        this.height       = null;
+        this.normHeight   = null;
+        this.biome        = null;
     }
 
     // TODO: temp? Temp biome set

@@ -18,7 +18,7 @@ export default class canvasHandler {
         this.closestCell = null;
 
         this.trackedKey = null;
-        this.keySens = 20;
+        this.keySens = 40;
 
 
 
@@ -62,18 +62,22 @@ export default class canvasHandler {
     keydown(event) {
         let code = event.code;
         switch(code){
+            case "ArrowUp":
             case "KeyW":
                 // Pan up
                 this.moveView(0, -this.keySens);
                 break;
+            case "ArrowDown":
             case "KeyS":
                 // Pan down
                 this.moveView(0, this.keySens);
                 break;
+            case "ArrowLeft":
             case "KeyA":
                 // Pan left
                 this.moveView(this.keySens, 0);
                 break;
+            case "ArrowRight":
             case "KeyD":
                 // Pan right
                 this.moveView(-this.keySens, 0);
@@ -157,10 +161,12 @@ export default class canvasHandler {
 
     // Mouse is moved
     pointerMove(event) {
+        let pos = this.getMousePosition(event);
+        this.trackedMousePos = pos;
         if(this.viewPos.dragging) {
             // Track the distance we have moved from the starting position
             let {prevX, prevY, dragging} = this.viewPos;
-            let pos = this.getMousePosition(event);
+
             let dx  = pos.x - prevX;
             let dy  = pos.y - prevY;
             if( prevX || prevY ) {
@@ -180,8 +186,13 @@ export default class canvasHandler {
 
     keyWheel(val){
         let zoom = 1 * val * this.zoomSensitivity;
-        let wx = (this.canvas.width / 2) / (this.canvas.width * this.view.zoom);
-        let wy = (this.canvas.height / 2) / (this.canvas.height * this.view.zoom);
+
+        let pos = {x: this.canvas.width/2, y: this.canvas.height/2};
+        if(this.trackedMousePos != null){
+            pos = this.trackedMousePos
+        }
+        let wx = (pos.x - this.view.x) / (this.canvas.width * this.view.zoom);
+        let wy = (pos.y - this.view.y) / (this.canvas.height * this.view.zoom);
 
         this.view.x -= wx * this.canvas.width * zoom;
         this.view.y -= wy * this.canvas.height * zoom;

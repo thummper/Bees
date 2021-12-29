@@ -1,13 +1,14 @@
 const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
-const Noise = require('noisejs');
+const Noise = require('asm-noise');
 
 import customVoronoi from './customVoronoi.js';
 import {Cell, Corner} from './cell.js';
 import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
-import Queue from './helper/queue.js';
-import { tychei } from 'seedrandom';
+import {Queue, Bounding, edgeDistance, maxMinAvg} from './helper/util.js';
+
+
 
 
 
@@ -58,7 +59,7 @@ export default class Map {
         this.generateMap();
     }
 
-    initBiomeColours(){
+    initBiomeColours() {
         this.biomeColours['land'] = d3.hsl(randomColour({ hue : 'red', luminosity: 'dark'}));
         console.log(this.biomeColours);
     }
@@ -108,21 +109,45 @@ export default class Map {
 
     // Generate a list of cells
     generateCells() {
+        // Get map bounding
+        let bounding = new Bounding(this.startX, this.startY, this.width, this.height);
+        let eDists   = [];
         for(let i = 0; i < this.numPoints; i++) {
             let cellPoints  = this.voronoi.getCell(i);
             let centerPoint = this.points[i];
-            let location = new Cell(cellPoints, centerPoint);
-            this.cells.push(location);
+            let cell = new Cell(cellPoints, centerPoint);
+            let edgeDist      = edgeDistance(cell.x, cell.y, bounding);
+            cell.edgeDistance = edgeDist;
+            eDists.push(edgeDist);
+            this.cells.push(cell);
+        }
+        let [max, min, avg] = maxMinAvg(eDists);
+        console.log("MAX MIN: ", max - min);
+
+        // Normalise edge distance
+        for(let c in this.cells) {
+            let cell = this.cells[c];
+
+
+            let normDistance = (cell.edgeDistance - min) / (max - min);
+            //console.log( cell.edgeDistance - min, max - min, normDistance);
+            //console.log("ED: ", cell.edgeDistance, " ND: ", normDistance);
+            cell.edgeDistance = normDistance;
         }
     }
 
     assignWater() {
         // Use ocean noise to assign water
+        let noiseVals = [];
         for(let c in this.cells) {
             let cell = this.cells[c];
             // Sample noise
-            let nVal = this.oceanNoise.noise2D(cell.x / 5000, cell.y / 5000);
-            if(nVal < 0.05 ) {
+            let noise = this.oceanNoise.noise2D(cell.x / 3500, cell.y / 3500);
+            console.log(noise);
+            let nVal = cell.edgeDistance + noise;
+
+            noiseVals.push(nVal);
+            if(nVal < 0.2 ) {
                 this.setCellBiome(cell, "water");
                 this.waterCells.push(cell);
             } else {
@@ -130,6 +155,7 @@ export default class Map {
                 this.landCells.push(cell);
             }
         }
+        maxMinAvg(noiseVals);
         // Once all water has been assigned we need to determine what is ocean / freshwater
         // Loop through our edge cells:
         // - If cell is edge:
