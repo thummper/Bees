@@ -31,8 +31,12 @@ export default class Map {
         this.cells      = [];
         this.waterCells = [];
         this.landCells  = [];
+        this.mountainCells = [];
         this.edgeCells  = [];
         this.cornerMap  = [];
+
+        this.mountainScale = 1000;
+        this.oceanScale    = 3500;
 
         this.randomGen  = null;
         this.delaunay   = null;
@@ -43,7 +47,7 @@ export default class Map {
         this.mountainNoise = null;
         // Control Lloyd relaxation
         this.relaxCounter = 0;
-        this.maxRelax     = 1;
+        this.maxRelax     = 3;
         // Terrain information
         this.lowestHeight  = null;
         this.highestHeight = null;
@@ -77,7 +81,7 @@ export default class Map {
     }
 
     generatePoints() {
-        for(let i = 0; i < this.numPoints; i++){
+        for(let i = 0; i < this.numPoints; i++) {
             let rx = this.randomGen() * (this.width - this.startX) + this.startX;
             let ry = this.randomGen() * (this.height - this.startY) + this.startY;
             this.points.push([rx, ry]);
@@ -98,6 +102,8 @@ export default class Map {
         // Attach height values to corners
         // this.giveCornerHeight();
         this.assignWater();
+        // Now generate mountains
+        this.assignMountains();
     }
 
     generateVoronoi() {
@@ -142,12 +148,12 @@ export default class Map {
         for(let c in this.cells) {
             let cell = this.cells[c];
             // Sample noise
-            let noise = this.oceanNoise.noise2D(cell.x / 3500, cell.y / 3500);
+            let noise = this.oceanNoise.noise2D(cell.x / this.oceanScale, cell.y / this.oceanScale);
             console.log(noise);
-            let nVal = cell.edgeDistance + noise;
+            let nVal = cell.edgeDistance + (noise / 1.6);
 
             noiseVals.push(nVal);
-            if(nVal < 0.2 ) {
+            if(nVal < 0.3 ) {
                 this.setCellBiome(cell, "water");
                 this.waterCells.push(cell);
             } else {
@@ -169,7 +175,6 @@ export default class Map {
             }
         }
 
-
         // Everything in waterQueue will be assigned ocean
         let waterQueue = new Queue(edgeCells);
         while(waterQueue.length() > 0) {
@@ -187,6 +192,15 @@ export default class Map {
 
     assignMountains() {
         // Use mountain noise to assign mountains
+        // Loop through land cells
+        let landCells = this.landCells;
+        for(let c in landCells) {
+            let cell  = landCells[c];
+            let noise = this.mountainNoise.noise2D(cell.x / this.mountainScale, cell.y / this.mountainScale);
+            if(noise < -0.86) {
+                this.setCellBiome(cell, "mountain");
+            }
+        }
     }
 
     // Give corners height values

@@ -14,6 +14,7 @@ export default class ColourHandler {
             //this.baseColours['ocean'] = 'black';
             this.baseColours['water'] = '#497786';
             this.baseColours['land']  = '#d3db95';
+            this.baseColours['mountain'] = '#eee7de';
         }
     }
 

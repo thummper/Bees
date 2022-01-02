@@ -15,7 +15,7 @@ var mapOptions = {
     'y': -5000,
     'width': 10000,
     'height': 10000,
-    'numPoints': 1000
+    'numPoints': 2000
 }
 let testMap = new Map(mapOptions);
 
