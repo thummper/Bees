@@ -2,11 +2,13 @@ const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
 const Noise = require('asm-noise');
 
+
 import customVoronoi from './customVoronoi.js';
 import {Cell, Corner} from './cell.js';
 import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
 import {Queue, Bounding, edgeDistance, maxMinAvg} from './helper/util.js';
+import randomNumber from './helper.js';
 
 
 
@@ -19,14 +21,23 @@ const randomColour = require('randomcolor');
 export default class Map {
     constructor(options) {
         // General map vars
-        this.seed   = options.seed;
-        this.startX = options.x;
-        this.startY = options.y;
-        this.width  = options.width;
-        this.height = options.height;
+        this.minx = options.x;
+        this.miny = options.y;
+        this.maxx = options.width;
+        this.maxy = options.height;
+
+        this.seed      = options.seed;
         this.numPoints = options.numPoints;
 
 
+        this.center = {
+            x: (this.maxx + this.minx) / 2,
+            y: (this.maxy + this.miny) / 2
+        }
+
+
+
+        this.equator = {};
         this.points     = [];
         this.cells      = [];
         this.waterCells = [];
@@ -44,7 +55,7 @@ export default class Map {
         this.simplex    = null;
 
         this.oceanNoise    = null;
-        this.mountainNoise = null;
+
         // Control Lloyd relaxation
         this.relaxCounter = 0;
         this.maxRelax     = 3;
@@ -60,19 +71,8 @@ export default class Map {
         this.initRandom();
         this.initSimplex();
         this.initBiomeColours();
+        this.generateEquator();
         this.generateMap();
-    }
-
-    initBiomeColours() {
-        this.biomeColours['land'] = d3.hsl(randomColour({ hue : 'red', luminosity: 'dark'}));
-        console.log(this.biomeColours);
-    }
-
-    initSimplex() {
-        // Expensive to run this?
-        this.simplex       = new SimplexNoise();
-        this.oceanNoise    = new SimplexNoise();
-        this.mountainNoise = new SimplexNoise();
     }
 
     // Get random seed for points
@@ -80,13 +80,46 @@ export default class Map {
         this.randomGen = SeedRandom(this.seed);
     }
 
+    initSimplex() {
+        // Expensive to run this?
+        this.simplex       = new SimplexNoise();
+        this.oceanNoise    = new SimplexNoise();
+
+    }
+
+    initBiomeColours() {
+        this.biomeColours['land'] = d3.hsl(randomColour({ hue : 'red', luminosity: 'dark'}));
+        console.log(this.biomeColours);
+    }
+
+    // Pick random gradient and generate line that passes though center point of the map
+    generateEquator() {
+        let m = randomNumber(-4, 4);
+        let c = this.center.y - (this.center.x * m);
+        let start = {
+            x: this.minx,
+            y: (this.minx * m) + c
+        };
+        let end = {
+            x: this.maxx -this.minx,
+            y: ( (this.maxx - this.minx) * m) + c
+        };
+        this.equator = {m: m, c: c, start: start, end:end};
+    }
+
+
+
+
+
     generatePoints() {
         for(let i = 0; i < this.numPoints; i++) {
-            let rx = this.randomGen() * (this.width - this.startX) + this.startX;
-            let ry = this.randomGen() * (this.height - this.startY) + this.startY;
+            let rx = this.randomGen() * (this.maxx - this.minx) + this.minx;
+            let ry = this.randomGen() * (this.maxy - this.miny) + this.miny;
             this.points.push([rx, ry]);
         }
     }
+
+
 
     // General function call to generate map
     generateMap() {
@@ -102,21 +135,19 @@ export default class Map {
         // Attach height values to corners
         // this.giveCornerHeight();
         this.assignWater();
-        // Now generate mountains
-        this.assignMountains();
+
     }
 
     generateVoronoi() {
         this.delaunay = Delaunay.from(this.points);
-        this.voronoi  = new customVoronoi(this.delaunay, [this.startX, this.startY, this.width, this.height]);
-        // Relaxation needs cells, so keeping this function here.
+        this.voronoi  = new customVoronoi(this.delaunay, [this.minx, this.miny, this.maxx, this.maxy]);
         this.generateCells();
     }
 
     // Generate a list of cells
     generateCells() {
         // Get map bounding
-        let bounding = new Bounding(this.startX, this.startY, this.width, this.height);
+        let bounding = new Bounding(this.minx, this.miny, this.maxx, this.maxy);
         let eDists   = [];
         for(let i = 0; i < this.numPoints; i++) {
             let cellPoints  = this.voronoi.getCell(i);
@@ -128,13 +159,11 @@ export default class Map {
             this.cells.push(cell);
         }
         let [max, min, avg] = maxMinAvg(eDists);
-        console.log("MAX MIN: ", max - min);
+
 
         // Normalise edge distance
         for(let c in this.cells) {
             let cell = this.cells[c];
-
-
             let normDistance = (cell.edgeDistance - min) / (max - min);
             //console.log( cell.edgeDistance - min, max - min, normDistance);
             //console.log("ED: ", cell.edgeDistance, " ND: ", normDistance);
@@ -149,7 +178,6 @@ export default class Map {
             let cell = this.cells[c];
             // Sample noise
             let noise = this.oceanNoise.noise2D(cell.x / this.oceanScale, cell.y / this.oceanScale);
-            console.log(noise);
             let nVal = cell.edgeDistance + (noise / 1.6);
 
             noiseVals.push(nVal);
@@ -190,18 +218,7 @@ export default class Map {
 
     }
 
-    assignMountains() {
-        // Use mountain noise to assign mountains
-        // Loop through land cells
-        let landCells = this.landCells;
-        for(let c in landCells) {
-            let cell  = landCells[c];
-            let noise = this.mountainNoise.noise2D(cell.x / this.mountainScale, cell.y / this.mountainScale);
-            if(noise < -0.86) {
-                this.setCellBiome(cell, "mountain");
-            }
-        }
-    }
+
 
     // Give corners height values
     giveCornerHeight() {
@@ -289,7 +306,7 @@ export default class Map {
                 let x = cornerPoints[j];
                 let y = cornerPoints[j+1];
                 // Check if corner is on the edge of the map
-                if(x <= this.startX || x >= this.width || y <= this.startY || y >= this.height) {
+                if(x <= this.minx || x >= this.maxx || y <= this.miny || y >= this.maxy) {
                     // console.log("Edge corner");
                     edge = true;
                 }

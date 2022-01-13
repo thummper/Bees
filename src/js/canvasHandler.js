@@ -28,6 +28,11 @@ export default class canvasHandler {
             dragging: false
         };
 
+        this.debugSettings = {
+            'drawEquator': true,
+            'drawCenter': true
+        }
+
         this.map = null;
         // Call functions
         // Make sure canvas is the correct size
@@ -147,6 +152,8 @@ export default class canvasHandler {
         this.viewPos.prevX = pos.x;
         this.viewPos.prevY = pos.y;
 
+        console.log(this.getGlobalMousePosition(event));
+
         this.getClosestCenter( this.getGlobalMousePosition(event) );
 
     }
@@ -248,6 +255,15 @@ export default class canvasHandler {
         requestAnimationFrame(this.draw.bind(this));
     }
 
+    drawLine(start, end, width = 4) {
+        this.ctx.save();
+        this.ctx.moveTo(start.x, start.y);
+        this.ctx.lineTo(end.x, end.y);
+        this.ctx.lineWidth = width;
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
 
     // Draw map
     drawMap() {
@@ -274,6 +290,15 @@ export default class canvasHandler {
     // In progress debug function
     drawDebug() {
         if(this.map != null) {
+
+            // Draw equator
+            if(this.debugSettings['drawEquator']) {
+                this.drawLine(this.map.equator['start'], this.map.equator['end']);
+            }
+
+
+
+
             let corners = this.map.cornerMap;
             for(let key in corners) {
                 let corner = corners[key];
@@ -283,13 +308,24 @@ export default class canvasHandler {
 
                 }
             }
+
+            if(this.debugSettings['drawCenter']) {
+                this.drawCircle(this.map.center.x, this.map.center.y, 1000);
+
+
+                this.drawCircle(this.map.startX, this.map.startY, 100);
+                this.drawCircle(this.map.width, this.map.height, 100);
+            }
         }
+
+
+
     }
 
 
-    drawCircle(x, y){
+    drawCircle(x, y, r = 10){
         this.ctx.beginPath();
-        this.ctx.arc(x, y, 10, 0, 2 * Math.PI);
+        this.ctx.arc(x, y, r, 0, 2 * Math.PI);
         this.ctx.fill();
         this.ctx.closePath();
     }
