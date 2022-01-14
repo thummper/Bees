@@ -1,5 +1,3 @@
-// import { tychei } from "seedrandom";
-const randomColour = require('randomcolor');
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
 
@@ -12,13 +10,16 @@ export default class canvasHandler {
         // Panning and zooming vars
         this.dragging = false;
         this.zoomSensitivity = 0.05;
-        this.minZoom = 0.05;
+        this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
         this.closestCell = null;
 
         this.trackedKey = null;
         this.keySens = 40;
+
+        // Maintain visible cells.
+        this.visibleCells = null;
 
 
 
@@ -30,7 +31,8 @@ export default class canvasHandler {
 
         this.debugSettings = {
             'drawEquator': true,
-            'drawCenter': true
+            'drawCenter': true,
+            'drawEquatorDistance': true
         }
 
         this.map = null;
@@ -279,10 +281,10 @@ export default class canvasHandler {
             // Tell the map where the camera is
             this.map.voronoi.setDisplay(display);
             // Get visible cells
-            let visibleCells = this.map.getCells(display);
+            this.visibleCells = this.map.getCells(display);
             // Draw visible cells
-            this.map.voronoi.renderMap(visibleCells, this.ctx);
-            this.drawCenters(visibleCells);
+            this.map.voronoi.renderMap(this.visibleCells, this.ctx);
+            this.drawCenters(this.visibleCells);
             // this.map.voronoi.render(this.ctx, display);
         }
     }
@@ -296,8 +298,9 @@ export default class canvasHandler {
                 this.drawLine(this.map.equator['start'], this.map.equator['end']);
             }
 
-
-
+            if(this.debugSettings['drawEquatorDistance']) {
+                this.map.voronoi.renderEquatorDistance(this.visibleCells, this.ctx, this.map.colourHandler.equatorGradient);
+            }
 
             let corners = this.map.cornerMap;
             for(let key in corners) {
@@ -310,9 +313,7 @@ export default class canvasHandler {
             }
 
             if(this.debugSettings['drawCenter']) {
-                this.drawCircle(this.map.center.x, this.map.center.y, 1000);
-
-
+                this.drawCircle(this.map.center.x, this.map.center.y, 50);
                 this.drawCircle(this.map.startX, this.map.startY, 100);
                 this.drawCircle(this.map.width, this.map.height, 100);
             }

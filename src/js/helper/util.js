@@ -62,7 +62,6 @@ function maxMinAvg(arr) {
         }
         sum = sum + arr[i];
     }
-    console.log("MAX: ", max, " MIN: ", min, " AVG: ", sum/arr.length);
     return [max, min, sum/arr.length];
 
 }

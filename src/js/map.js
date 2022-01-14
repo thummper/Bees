@@ -1,6 +1,6 @@
 const {Delaunay} = require('d3-delaunay');
 const SeedRandom = require('seedrandom');
-const Noise = require('asm-noise');
+
 
 
 import customVoronoi from './customVoronoi.js';
@@ -8,7 +8,7 @@ import {Cell, Corner} from './cell.js';
 import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
 import {Queue, Bounding, edgeDistance, maxMinAvg} from './helper/util.js';
-import randomNumber from './helper.js';
+import {randomNumber, perpendicularDistance} from './helper.js';
 
 
 
@@ -71,8 +71,8 @@ export default class Map {
         this.initRandom();
         this.initSimplex();
         this.initBiomeColours();
-        this.generateEquator();
         this.generateMap();
+        this.generateEquator();
     }
 
     // Get random seed for points
@@ -105,10 +105,24 @@ export default class Map {
             y: ( (this.maxx - this.minx) * m) + c
         };
         this.equator = {m: m, c: c, start: start, end:end};
+
+        // Assign cell equator distance
+        let distances = [];
+        for(let i = 0; i < this.cells.length; i++) {
+            let cell = this.cells[i];
+            let point = {x: cell.x, y: cell.y};
+            let distance = perpendicularDistance(point, this.equator);
+            distances.push(distance);
+            cell.equatorDistance = distance;
+        }
+
+        let [max, min, average] = maxMinAvg(distances);
+        // Normalize cell distances
+        for(let i = 0; i< this.cells.length; i++) {
+            let cell = this.cells[i];
+            cell.equatorDistance = ((cell.equatorDistance - min) / (max - min)) * 100;
+        }
     }
-
-
-
 
 
     generatePoints() {
@@ -128,7 +142,11 @@ export default class Map {
         // Generate 1st map
         this.generateVoronoi();
         // Relax the map
-        this.relaxMap();
+        while(this.relaxCounter < this.maxRelax){
+            this.relaxMap();
+            this.relaxCounter += 1;
+        };
+
         // Now we have final map
         this.createCellCorners();
         this.attachCellNeighbours();
@@ -386,13 +404,11 @@ export default class Map {
 
     // Apply lloyd relaxation iteratively
     relaxMap(){
-        while(this.relaxCounter < this.maxRelax){
-            this.lloydRelaxation();
-            this.resetVoronoi();
-            this.generateVoronoi();
-            this.relaxCounter += 1;
-        }
+        this.lloydRelaxation();
+        this.resetVoronoi();
+        this.generateVoronoi();
     }
+
 
     // Apply Lloyd relaxation to make voronoi cells more uniform (should make a better map)
     lloydRelaxation() {

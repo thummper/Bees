@@ -1,10 +1,24 @@
 // Handle biome colours, not sure if should be a class but map class is getting a bit big.
+const randomColour = require('randomcolor');
+const nanoColour   = require('nanocolor-hsl');
+
 
 export default class ColourHandler {
     constructor() {
         this.baseColours = {};
         this.setBiomeColours();
+        this.generateHeatMap();
     }
+
+    generateHeatMap() {
+        let start = "#e3622f";
+        let end   = "#c6ecde";
+        this.equatorGradient = nanoColour.gradient(start, end, 14);
+
+
+
+    }
+
     setBiomeColours(biomeColours = null) {
         if(biomeColours == null) {
             // Generate yourself (default behaviour)

@@ -1,5 +1,3 @@
-
-
 const {Delaunay, Voronoi} = require('d3-delaunay');
 
 export default class customVoronoi extends Voronoi {
@@ -44,12 +42,25 @@ export default class customVoronoi extends Voronoi {
     }
 
     // Render each cell in cells
-    renderMap(cells, ctx){
-        for( let i = 0; i < cells.length; i++){
+    renderMap(cells, ctx) {
+        for( let i = 0; i < cells.length; i++) {
             let cell = cells[i];
-
             this.drawCell(cell.cellPoints, ctx, cell.colour);
         }
+    }
+    // Render equator distance
+    renderEquatorDistance(cells, ctx, gradient) {
+        console.log(gradient);
+        for( let i = 0; i < cells.length; i ++) {
+            let cell = cells[i];
+
+            let index = Math.round(cell.equatorDistance / 10);
+
+
+
+            this.drawCell(cell.cellPoints, ctx, gradient[index].hex);
+        }
+
     }
 
 
