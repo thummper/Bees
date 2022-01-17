@@ -9,7 +9,7 @@ export default class canvasHandler {
 
         // Panning and zooming vars
         this.dragging = false;
-        this.zoomSensitivity = 0.05;
+        this.zoomSensitivity = 0.005;
         this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
@@ -30,9 +30,9 @@ export default class canvasHandler {
         };
 
         this.debugSettings = {
-            'drawEquator': true,
-            'drawCenter': true,
-            'drawEquatorDistance': true
+            'drawEquator': false,
+            'drawCenter': false,
+            'equatorDistance': false
         }
 
         this.map = null;
@@ -153,11 +153,8 @@ export default class canvasHandler {
         let pos = this.getMousePosition(event);
         this.viewPos.prevX = pos.x;
         this.viewPos.prevY = pos.y;
-
         console.log(this.getGlobalMousePosition(event));
-
         this.getClosestCenter( this.getGlobalMousePosition(event) );
-
     }
 
     // Mouse is released
@@ -298,7 +295,7 @@ export default class canvasHandler {
                 this.drawLine(this.map.equator['start'], this.map.equator['end']);
             }
 
-            if(this.debugSettings['drawEquatorDistance']) {
+            if(this.debugSettings['equatorDistance']) {
                 this.map.voronoi.renderEquatorDistance(this.visibleCells, this.ctx, this.map.colourHandler.equatorGradient);
             }
 

@@ -50,11 +50,11 @@ export default class customVoronoi extends Voronoi {
     }
     // Render equator distance
     renderEquatorDistance(cells, ctx, gradient) {
-        console.log(gradient);
+
         for( let i = 0; i < cells.length; i ++) {
             let cell = cells[i];
 
-            let index = Math.round(cell.equatorDistance / 10);
+            let index = Math.round(cell.equatorDistance);
 
 
 

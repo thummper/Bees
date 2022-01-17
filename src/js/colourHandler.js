@@ -13,7 +13,7 @@ export default class ColourHandler {
     generateHeatMap() {
         let start = "#e3622f";
         let end   = "#c6ecde";
-        this.equatorGradient = nanoColour.gradient(start, end, 14);
+        this.equatorGradient = nanoColour.gradient(start, end, 101);
 
 
 
