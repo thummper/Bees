@@ -7,12 +7,31 @@
     <body>
         <div id="mapContainer">
             <canvas id="mapDiagram"></canvas>
+
+
+
+            <div class="debugContainer">
+                <form>
+                    <div class="formRow">
+                        <label for="equatorDistance">Render Equator Distance</label>
+                        <input type="checkbox" id="equatorDistance" >
+                    </div>
+                    <div class="formRow">
+                        <label for="drawEquator">Draw Equator</label>
+                        <input type="checkbox" id="drawEquator" >
+                    </div>
+                    <div class="formRow">
+                        <label for="drawCenter">Draw Map Center</label>
+                        <input type="checkbox" id="drawCenter" >
+                    </div>
+                </form>
+            </div>
+
         </div>
-        <div id="debugButtons">
-            <button id="lloydrelax">
-                Do Lloyd Relaxation
-            </button>
-        </div>
+
+
+
+
         <script src="dist/bundle.js"></script>
     </body>
 </html>
