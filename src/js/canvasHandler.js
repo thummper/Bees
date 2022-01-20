@@ -34,7 +34,8 @@ export default class canvasHandler {
             'drawCenter': false,
             'equatorDistance': false,
             'drawCellCenters': false,
-            'drawFocusedInfo': true
+            'drawFocusedInfo': true,
+            'renderMoisture': false
         }
 
         this.map = null;
@@ -310,6 +311,13 @@ export default class canvasHandler {
             if(this.debugSettings['equatorDistance']) {
                 this.map.voronoi.renderEquatorDistance(this.visibleCells, this.ctx, this.map.colourHandler.equatorGradient);
             }
+
+            if(this.debugSettings['renderMoisture']) {
+                this.map.voronoi.renderMoistureMap(this.visibleCells, this.ctx, this.map.colourHandler.moistureGradient);
+            }
+
+
+
 
             let corners = this.map.cornerMap;
             for(let key in corners) {

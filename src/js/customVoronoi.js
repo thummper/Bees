@@ -50,17 +50,19 @@ export default class customVoronoi extends Voronoi {
     }
     // Render equator distance
     renderEquatorDistance(cells, ctx, gradient) {
-
         for( let i = 0; i < cells.length; i ++) {
             let cell = cells[i];
-
             let index = Math.round(cell.equatorDistance);
-
-
-
             this.drawCell(cell.cellPoints, ctx, gradient[index].hex);
         }
+    }
 
+    renderMoistureMap(cells, ctx, gradient) {
+        for(let i in cells) {
+            let cell = cells[i];
+            let index = Math.round(cell.moisture);
+            this.drawCell(cell.cellPoints, ctx, gradient[index].hex);
+        }
     }
 
 

@@ -8,15 +8,19 @@ export default class ColourHandler {
         this.baseColours = {};
         this.setBiomeColours();
         this.generateHeatMap();
+        this.generateMoistureMap();
     }
 
     generateHeatMap() {
         let start = "#e3622f";
         let end   = "#c6ecde";
         this.equatorGradient = nanoColour.gradient(start, end, 101);
+    }
 
-
-
+    generateMoistureMap() {
+        let start = "#406a88";
+        let end   = "#f9f2cf";
+        this.moistureGradient = nanoColour.gradient(start, end, 101);
     }
 
     setBiomeColours(biomeColours = null) {

@@ -48,6 +48,7 @@ export default class Map {
 
         this.mountainScale = 1000;
         this.oceanScale    = 3500;
+        this.moistureScale = 2200;
 
         this.randomGen  = null;
         this.delaunay   = null;
@@ -55,6 +56,7 @@ export default class Map {
         this.simplex    = null;
 
         this.oceanNoise    = null;
+        this.moistureNoise = null;
 
         // Control Lloyd relaxation
         this.relaxCounter = 0;
@@ -84,6 +86,7 @@ export default class Map {
         // Expensive to run this?
         this.simplex       = new SimplexNoise();
         this.oceanNoise    = new SimplexNoise();
+        this.moistureNoise = new SimplexNoise();
 
     }
 
@@ -153,6 +156,7 @@ export default class Map {
         // Attach height values to corners
         // this.giveCornerHeight();
         this.assignWater();
+        this.assignMoisture();
 
     }
 
@@ -180,12 +184,32 @@ export default class Map {
 
 
         // Normalise edge distance
+        let normDist = [];
         for(let c in this.cells) {
             let cell = this.cells[c];
-            let normDistance = (cell.edgeDistance - min) / (max - min);
+            let normDistance = ((cell.edgeDistance - min) / (max - min)) * 100;
             //console.log( cell.edgeDistance - min, max - min, normDistance);
             //console.log("ED: ", cell.edgeDistance, " ND: ", normDistance);
             cell.edgeDistance = normDistance;
+            normDist.push(normDistance);
+        }
+    }
+
+    assignMoisture() {
+        let noiseVals = [];
+        for(let c in this.cells) {
+            let cell  = this.cells[c];
+            let tempRandom = randomNumber(this.moistureScale / 0.85, this.moistureScale);
+            let noise = this.moistureNoise.noise2D(cell.x / tempRandom, cell.y / tempRandom);
+            noiseVals.push(noise);
+            cell.moisture = noise;
+
+        }
+        let [max, min, avg] = maxMinAvg(noiseVals);
+        for(let c in this.cells) {
+            let cell = this.cells[c];
+            cell.moisture = ((cell.moisture - min) / (max - min)) * 100;
+            //console.log(cell.moisture);
         }
     }
 
@@ -196,7 +220,7 @@ export default class Map {
             let cell = this.cells[c];
             // Sample noise
             let noise = this.oceanNoise.noise2D(cell.x / this.oceanScale, cell.y / this.oceanScale);
-            let nVal = cell.edgeDistance + (noise / 1.6);
+            let nVal = (cell.edgeDistance / 100) + (noise / 1.6);
 
             noiseVals.push(nVal);
             if(nVal < 0.3 ) {
@@ -207,7 +231,7 @@ export default class Map {
                 this.landCells.push(cell);
             }
         }
-        maxMinAvg(noiseVals);
+
         // Once all water has been assigned we need to determine what is ocean / freshwater
         // Loop through our edge cells:
         // - If cell is edge:
