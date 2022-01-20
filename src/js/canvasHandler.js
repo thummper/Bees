@@ -32,7 +32,9 @@ export default class canvasHandler {
         this.debugSettings = {
             'drawEquator': false,
             'drawCenter': false,
-            'equatorDistance': false
+            'equatorDistance': false,
+            'drawCellCenters': false,
+            'drawFocusedInfo': true
         }
 
         this.map = null;
@@ -281,7 +283,7 @@ export default class canvasHandler {
             this.visibleCells = this.map.getCells(display);
             // Draw visible cells
             this.map.voronoi.renderMap(this.visibleCells, this.ctx);
-            this.drawCenters(this.visibleCells);
+
             // this.map.voronoi.render(this.ctx, display);
         }
     }
@@ -289,6 +291,16 @@ export default class canvasHandler {
     // In progress debug function
     drawDebug() {
         if(this.map != null) {
+
+            // Draw cell centers
+            if(this.debugSettings['drawCellCenters']) {
+                this.drawCenters(this.visibleCells);
+            }
+
+            // Draw focused cell information
+            if(this.debugSettings['drawFocusedInfo']) {
+                this.drawFocused();
+            }
 
             // Draw equator
             if(this.debugSettings['drawEquator']) {
@@ -335,22 +347,14 @@ export default class canvasHandler {
             let c = cells[i];
             let [x, y] = c.centerPoint;
             this.ctx.fillStyle = "orange";
-            // If current cell is focused, draw it's corners and highlight the center
-            if(this.closestCell != null && this.closestCell == c) {
-                closestVisible = true;
-            }
             this.drawCircle(x, y);
-        }
-        // Not sure if I like this check
-        if(closestVisible) {
-            this.drawFocused();
         }
     }
 
     // Debug drawing for currently focused cell.
     drawFocused() {
+        if(this.closestCell != null) {
             // Currently this just draws over previous stuff
-
             let cell = this.closestCell;
             // Draw cell center
             this.ctx.fillStyle = "pink";
@@ -381,6 +385,7 @@ export default class canvasHandler {
                 let neighbour = neighbours[n];
                 this.drawCircle(neighbour.centerPoint[0], neighbour.centerPoint[1]);
             }
+        }
     }
 
     //Stroke text for corner height
