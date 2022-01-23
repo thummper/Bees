@@ -9,6 +9,7 @@ import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
 import {Queue, Bounding, edgeDistance, maxMinAvg} from './helper/util.js';
 import {randomNumber, perpendicularDistance} from './helper.js';
+import BiomeAssigner from './biomeAssigner.js';
 
 
 
@@ -48,7 +49,7 @@ export default class Map {
 
         this.mountainScale = 1000;
         this.oceanScale    = 3500;
-        this.moistureScale = 2200;
+        this.moistureScale = 8000;
 
         this.randomGen  = null;
         this.delaunay   = null;
@@ -68,6 +69,7 @@ export default class Map {
         this.biomeColours  = {};
 
         this.colourHandler = new ColourHandler();
+        this.biomeAssigner = new BiomeAssigner();
 
         // Important - generate the map!
         this.initRandom();
@@ -75,6 +77,7 @@ export default class Map {
         this.initBiomeColours();
         this.generateMap();
         this.generateEquator();
+        this.assignBiomes();
     }
 
     // Get random seed for points
@@ -123,7 +126,22 @@ export default class Map {
         // Normalize cell distances
         for(let i = 0; i< this.cells.length; i++) {
             let cell = this.cells[i];
-            cell.equatorDistance = ((cell.equatorDistance - min) / (max - min)) * 100;
+            let normDistance = (cell.equatorDistance - min) / (max - min) * 99;
+            cell.equatorDistance = 99 - normDistance;
+        }
+    }
+
+    assignBiomes() {
+        for(let cell of this.landCells) {
+            let moist  = Math.floor(cell.moisture);
+            let temp   = Math.floor(cell.equatorDistance);
+
+            // console.log("T: ", temp, " M: ", moist, " ");
+            // console.log(this.biomeAssigner.biomeGrid[temp]);
+            // console.log(this.biomeAssigner.biomeGrid[temp][moist]);
+            let biome  = this.biomeAssigner.biomeGrid[temp][moist];
+            // Set biome and also colour
+            this.setCellBiome(cell, biome);
         }
     }
 
@@ -199,7 +217,7 @@ export default class Map {
         let noiseVals = [];
         for(let c in this.cells) {
             let cell  = this.cells[c];
-            let tempRandom = randomNumber(this.moistureScale / 0.85, this.moistureScale);
+            let tempRandom = randomNumber(this.moistureScale / 0.89, this.moistureScale);
             let noise = this.moistureNoise.noise2D(cell.x / tempRandom, cell.y / tempRandom);
             noiseVals.push(noise);
             cell.moisture = noise;
@@ -208,7 +226,7 @@ export default class Map {
         let [max, min, avg] = maxMinAvg(noiseVals);
         for(let c in this.cells) {
             let cell = this.cells[c];
-            cell.moisture = ((cell.moisture - min) / (max - min)) * 100;
+            cell.moisture = (((cell.moisture - min) / (max - min)) * 99);
             //console.log(cell.moisture);
         }
     }

@@ -54,6 +54,8 @@ export default class customVoronoi extends Voronoi {
             let cell = cells[i];
             let index = Math.round(cell.equatorDistance);
             this.drawCell(cell.cellPoints, ctx, gradient[index].hex);
+            ctx.font = "128px Calibri";
+            ctx.strokeText( Math.round(cell.equatorDistance).toString(), cell.x, cell.y);
         }
     }
 
