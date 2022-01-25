@@ -35,7 +35,8 @@ export default class canvasHandler {
             'equatorDistance': false,
             'drawCellCenters': false,
             'drawFocusedInfo': true,
-            'renderMoisture': false
+            'renderMoisture': false,
+            'renderHeight': false,
         }
 
         this.map = null;
@@ -314,6 +315,10 @@ export default class canvasHandler {
 
             if(this.debugSettings['renderMoisture']) {
                 this.map.voronoi.renderMoistureMap(this.visibleCells, this.ctx, this.map.colourHandler.moistureGradient);
+            }
+
+            if(this.debugSettings['renderHeight']) {
+                this.map.voronoi.renderHeightMap(this.visibleCells, this.ctx, this.map.colourHandler.heightGradient);
             }
 
 

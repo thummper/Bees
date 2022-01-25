@@ -48,8 +48,9 @@ export default class Map {
         this.cornerMap  = [];
 
         this.mountainScale = 1000;
-        this.oceanScale    = 3500;
+        this.oceanScale    = 3400;
         this.moistureScale = 8000;
+        this.heightScale   = 8000;
 
         this.randomGen  = null;
         this.delaunay   = null;
@@ -58,6 +59,7 @@ export default class Map {
 
         this.oceanNoise    = null;
         this.moistureNoise = null;
+        this.heightNoise   = null;
 
         // Control Lloyd relaxation
         this.relaxCounter = 0;
@@ -90,6 +92,7 @@ export default class Map {
         this.simplex       = new SimplexNoise();
         this.oceanNoise    = new SimplexNoise();
         this.moistureNoise = new SimplexNoise();
+        this.heightNoise   = new SimplexNoise();
 
     }
 
@@ -168,13 +171,13 @@ export default class Map {
             this.relaxCounter += 1;
         };
 
-        // Now we have final map
+        // Generate graph structures.
         this.createCellCorners();
         this.attachCellNeighbours();
-        // Attach height values to corners
-        // this.giveCornerHeight();
+
         this.assignWater();
         this.assignMoisture();
+        this.assignHeightValues();
 
     }
 
@@ -281,62 +284,47 @@ export default class Map {
 
 
     // Give corners height values
-    giveCornerHeight() {
-        // Loop though all corners
-        let lowestHeight  = Infinity;
-        let highestHeight = 0;
+    assignHeightValues() {
+        // Loop through all corners and assign height values to them.
+        let assignedHeights = []
         if(this.cornerMap.length > 0) {
-            for(let key in this.cornerMap) {
-                let corner = this.cornerMap[key];
-                let height = this.simplex.noise2D(corner.x / 8000, corner.y / 8000);
-                corner.height = height;
-                if(height > highestHeight) {
-                    highestHeight = height;
-                }
-                if(height < lowestHeight) {
-                    lowestHeight = height;
-                }
 
-            }
-            // Normalise colour
-            for(let key in this.cornerMap) {
-                let corner = this.cornerMap[key];
-                let normHeight = (corner.height - lowestHeight) / (highestHeight - lowestHeight);
-                corner.normHeight = normHeight;
+
+            console.log(this.cornerMap);
+
+            for(let cornerKey in this.cornerMap) {
+                let corner = this.cornerMap[cornerKey];
+
+
+
+                let scale  = randomNumber(this.heightScale * 0.86, this.heightScale);
+                let height = this.heightNoise.noise2D( corner.x / scale, corner.y / scale);
+                corner.height = height;
+                assignedHeights.push(height);
             }
         }
-        this.lowestHeight  = lowestHeight;
-        this.highestHeight = highestHeight;
 
-        // let range = ((Math.abs(lowestHeight) + Math.abs(highestHeight)) * 0.35);
-        // console.log(" RANGE: ", range);
-        // this.seaLevel = lowestHeight + range;
-        // console.log("Lowest: ", lowestHeight, " Highest: ", highestHeight, " Sea level: ", this.seaLevel);
-        this.seaLevel = 0.35;
+        let [max, min, avg] = maxMinAvg(assignedHeights);
+        // Normalize heights
+        for(let cornerKey in this.cornerMap) {
+            let corner = this.cornerMap[cornerKey];
+            let normHeight = ((corner.height - min) / (max - min)) * 99;
+            corner.height  = normHeight;
+        }
+        // Now give cells height
         this.giveCellsHeight();
     }
 
     // Given that corners have height values, the height value of a cell will be given by averaging the corner vals
     giveCellsHeight() {
-        for(let i = 0; i < this.cells.length; i++) {
-            let cell = this.cells[i];
-            let corners = cell.corners;
+        // Loop through cells, average corner heights and apply that value as height
+        for(let cell of this.cells) {
+            let corners     = cell.corners;
             let heightTotal = 0;
-            for(let j = 0; j < corners.length; j++) {
-                heightTotal += corners[j].height;
+            for(let corner of corners) {
+                heightTotal += corner.height;
             }
-            let heightAverage = heightTotal / corners.length;
-            cell.height = (heightAverage - this.lowestHeight) / (this.highestHeight - this.lowestHeight);
-
-            // if(cell.height <= this.seaLevel) {
-            //     // Scale again
-            //     cell.height = (cell.height) / (this.seaLevel);
-            //     this.setCellBiome(cell, "water");
-
-            // } else {
-            //     cell.height = (cell.height - this.seaLevel) / (1 - this.seaLevel);
-            //     this.setCellBiome(cell, "land");
-            // }
+            cell.height = heightTotal / corners.length;
         }
     }
 

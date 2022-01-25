@@ -9,6 +9,13 @@ export default class ColourHandler {
         this.setBiomeColours();
         this.generateHeatMap();
         this.generateMoistureMap();
+        this.generateHeightMap();
+    }
+
+    generateHeightMap() {
+        let start = "#1d2225";
+        let end   = "#deebf4";
+        this.heightGradient = nanoColour.gradient(start, end, 100);
     }
 
     generateHeatMap() {

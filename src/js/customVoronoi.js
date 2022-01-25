@@ -67,6 +67,14 @@ export default class customVoronoi extends Voronoi {
         }
     }
 
+    renderHeightMap(cells, ctx, gradient) {
+        for(let i in cells) {
+            let cell = cells[i];
+            let index = Math.round(cell.height);
+            this.drawCell(cell.cellPoints, ctx, gradient[index].hex);
+        }
+    }
+
 
     drawCell(points, ctx, fill = "black"){
 
