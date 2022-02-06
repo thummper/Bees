@@ -5,6 +5,7 @@
 
   -->
   <div id="mapContainer">
+
       <canvas id="mapDiagram"></canvas>
       <div class="debugContainer" >
         <div class="containerTitle">
@@ -53,8 +54,12 @@
 </template>
 
 <script>
+
 import * as eva from 'eva-icons';
-// import HelloWorld from './components/HelloWorld.vue'
+import CanvasHandler from "@/assets/js/canvasHandler.js";
+import Map from "@/assets/js/map.js";
+import InputHandler from "@/assets/js/inputHandler.js";
+
 
 export default {
   name: 'App',
@@ -69,6 +74,23 @@ export default {
   },
   mounted() {
     eva.replace();
+    let mapContainer  = document.querySelector('#mapContainer');
+    let canvas        = mapContainer.querySelector("#mapDiagram");
+    let canvasHandler = new CanvasHandler(mapContainer, canvas);
+    let mapOptions = {
+      'seed': 42,
+      'x': -5000,
+      'y': -5000,
+      'width': 20000,
+      'height': 20000,
+      'numPoints': 5000
+    }
+    let map = new Map(mapOptions);
+    canvasHandler.attachMap(map);
+    let inputHandler  = new InputHandler(canvasHandler);
+    // Get debug panel
+    let debugPanel = document.querySelector(".debugContainer");
+    inputHandler.attachDebug(debugPanel);
   },
   methods: {
     toggleDebug(){
@@ -76,6 +98,7 @@ export default {
     }
   }
 }
+
 
 
 
