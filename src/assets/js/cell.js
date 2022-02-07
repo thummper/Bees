@@ -9,6 +9,7 @@ export default class Cell {
         this.colour      = "black";
         this.corners     = [];
         this.neighbours  = [];
+        this.edges       = [];
 
         // Terrain vars
         this.edgeDistance = null;
@@ -20,6 +21,14 @@ export default class Cell {
     // TODO: temp? Temp biome set
     setBiome(biome) {
         this.biome = biome;
+    }
+
+    // Add edge
+    addEdge(edge) {
+        if(!this.edges.includes(edge)) {
+            this.edges.push(edge);
+        }
+
     }
 
     // Add neighbour

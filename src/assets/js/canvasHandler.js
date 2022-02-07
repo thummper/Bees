@@ -9,7 +9,7 @@ export default class canvasHandler {
 
         // Panning and zooming vars
         this.dragging = false;
-        this.zoomSensitivity = 0.005;
+        this.zoomSensitivity = 0.05;
         this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
@@ -46,7 +46,7 @@ export default class canvasHandler {
         this.view = {
             x: this.canvas.width / 2.5,
             y: this.canvas.height / 2.5,
-            zoom: 0.05
+            zoom: 1
         };
         // Register important event listeners
         this.registerListeners();
@@ -195,6 +195,10 @@ export default class canvasHandler {
     }
 
     keyWheel(val){
+        val = val / (this.view.zoom * 2);
+
+
+
         let zoom = 1 * val * this.zoomSensitivity;
 
         let pos = {x: this.canvas.width/2, y: this.canvas.height/2};
@@ -259,17 +263,9 @@ export default class canvasHandler {
     }
 
     drawLine(start, end, width = 4, color = false) {
-        this.ctx.save();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(end.x, end.y);
         this.ctx.lineWidth = width;
-
-        if(color){
-            this.ctx.strokeStyle = color;
-        }
-
-        this.ctx.stroke();
-        this.ctx.restore();
     }
 
 
@@ -289,25 +285,52 @@ export default class canvasHandler {
 
             this.map.voronoi.setDisplay(display);
             // Get visible cells
-            // this.visibleCells = this.map.getCells(display);
-            this.visibleCells = this.map.tempCellDraw;
+            this.visibleCells = this.map.getCells(display);
+            // this.visibleCells = this.map.tempCellDraw;
             // Draw visible cells
             this.map.voronoi.renderMap(this.visibleCells, this.ctx);
             // this.map.voronoi.render(this.ctx, display);
 
             // Temp - draw edges
-            this.drawEdges(this.map.edges);
+            // console.log("Drawing ", this.visibleCells.length, " cells");
+            // for(let i = 0; i < this.visibleCells.length; i++) {
+            //     let cell = this.visibleCells[i];
+            //     this.drawEdges(cell.edges)
+            // }
+            this.ctx.lineWidth = 4;
+            let edges = [];
+            for(let i = 0; i < this.visibleCells.length; i++) {
+                let cell = this.visibleCells[i];
+                let cellEdges = cell.edges;
+                for(let j = 0; j < cellEdges.length; j++) {
+                    let edge = cellEdges[j];
+                    edges.push(edge);
+                }
+            }
+            for(let i = 0; i < edges.length; i++) {
+                this.drawEdges(edges[i]);
+            }
+            this.ctx.stroke();
 
         }
     }
 
-    drawEdges(edges) {
-        for(let i = 0; i < edges.length; i++) {
-            let edge = edges[i];
-            let start = edge.corners[0];
-            let end   = edge.corners[1];
-            this.drawLine(start, end, 4, edge.color);
+    drawEdges(edge) {
+        let start  = edge.start;
+        let end    = edge.end;
+        let points = edge.points;
+
+
+        this.ctx.moveTo(start.x, start.y);
+
+        for(let i = 0; i < points.length; i++) {
+            let edgePoint = points[i];
+            this.ctx.lineTo(edgePoint.x, edgePoint.y);
+
         }
+        this.ctx.lineTo(end.x, end.y);
+
+
 
     }
 

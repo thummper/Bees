@@ -79,11 +79,11 @@ export default {
     let canvasHandler = new CanvasHandler(mapContainer, canvas);
     let mapOptions = {
       'seed': 42,
-      'x': -5000,
-      'y': -5000,
-      'width': 20000,
-      'height': 20000,
-      'numPoints': 5000
+      'x': 0,
+      'y': 0,
+      'width': 2000,
+      'height': 2000,
+      'numPoints': 100
     }
     let map = new Map(mapOptions);
     canvasHandler.attachMap(map);

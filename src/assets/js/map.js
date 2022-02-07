@@ -348,16 +348,73 @@ export default class Map {
     }
 
 
+    getCellLine(edgeCells) {
+        // edgeCells is an array of cells, get the eqation of the line between these two cells
+        let cell1 = edgeCells[0];
+        let cell2 = edgeCells[1];
+
+        let dy = cell2.y - cell1.y;
+        let dx = cell2.x - cell1.x;
+
+        let m  = dy/dx;
+        let c  = cell1.y - (m * cell1.x);
+
+        return {m: m, c: c};
+
+
+    }
+
+    makeFuzzyEdges() {
+        for(let i = 0; i < this.edges.length; i++) {
+            let edge = this.edges[i];
+            let edgeCells = edge.cells;
+
+            if(edgeCells.length != 2) {
+                console.log(" This edge does not have 2 cells associated with it: ", edgeCells.length);
+            } else {
+                // We have 2 cells.
+                // We want to draw a line from start to end
+                // Get the line that links the two cells
+                let cellLine = this.getCellLine(edgeCells);
+                // Pick an x coord inbetween the cells
+                let x1 = edgeCells[0].x;
+                let x2 = edgeCells[1].x;
+
+                let dx = x2 - x1;
+                let mid = x1 + (dx / 2);
+
+
+                let division = randomNumber(0.4, 0.6);
+
+                let randX = randomNumber(x1, x2);
+                let y     = (mid * cellLine.m) + cellLine.c;
+
+                // Add this point to the edge.
+                edge.points.push({x: randX, y: y});
+
+                console.log(edge);
+
+
+
+            }
+        }
+    }
+
 
     // Create cell edges
     createCellEdges() {
         let cornerKeys = Object.keys(this.cornerMap);
         let edgeMap = {};
+
+        // Loop through every corner
         for(let i = 0; i < cornerKeys.length; i++) {
+            // For each corner
             let corner = this.cornerMap[cornerKeys[i]];
+            // Get its connections
             let connections = corner.connections;
+            // For each connection
             for(let j = 0; j < connections.length; j++) {
-                // For each connection
+                // Try and make a unique edge
                 let connection = connections[j];
                 let conCorner  = connection.corner;
                 // Make an edge
@@ -365,48 +422,26 @@ export default class Map {
                 let name1 = corner.name + conCorner.name;
                 let name2 = conCorner.name + corner.name;
 
+
+
+                // Get the cells that this edge shares
                 let c1Cells = corner.cells;
                 let c2Cells = conCorner.cells;
-
-
-
                 let intersection = [...c1Cells].filter(x => c2Cells.has(x));
 
                 if( (name1 in edgeMap) || (name2 in edgeMap) ) {
                     // Try and add extra intersection cells to corner
                     let edge = edgeMap[name1];
                     edge.addCells(intersection);
-
                 } else {
-                    let edge = new Edge([corner, connection.corner]);
+                    let edge = new Edge(corner, connection.corner);
                     edgeMap[name1] = edge;
                     edgeMap[name2] = edge;
                     edge.addCells(intersection);
                     this.edges.push(edge);
                 }
-
-
-
-
-
-
-
-
-
-                // We need some logic to check if this edge has already been made
-
-
-                // let connection = connections[j];
-                // let makeEdge = this.shouldMakeEdge(corner, connection.corner);
-                // if(makeEdge != false) {
-                //     let [corner1, corner2, edgeCells] = makeEdge;
-                //     console.log("Making an edge");
-                //     let edge = new Edge([corner1, corner2], edgeCells);
-                //     this.edges.push(edge);
-                // }
             }
-
-            for(let i = 0; i < this.edges.length; i++){
+            for(let i = 0; i < this.edges.length; i++) {
                 let edge = this.edges[i];
                 if(edge.cells.length >= 3) {
                     edge.color = "#39ff14";
@@ -414,11 +449,9 @@ export default class Map {
                     edge.color = "#f8234d";
                 }
             }
-
-            console.log(" EDGE LENGTH: ", this.edges.length)
         }
-
-
+        console.log(" EDGE LENGTH: ", this.edges.length)
+        this.makeFuzzyEdges();
     }
 
     // Should we make an edge between 2 corners?
