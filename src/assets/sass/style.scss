@@ -28,7 +28,7 @@
     margin-top: 32px;
     padding: 8px;
     box-sizing: border-box;
-    background: rgba(#E6EDE9, 0.6);
+    background: rgba(#E6EDE9, 0.7);
     border-radius: 4px;
 
 
@@ -48,6 +48,9 @@
     }
     .formRow, .containerTitle {
         padding: 4px;
+    }
+    .formRow {
+        padding-right: 8px;
     }
 
     .formRow {
@@ -73,10 +76,6 @@
         align-items: center;
         opacity: 0.8;
     }
-
-
-
-
 }
 
 

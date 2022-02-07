@@ -258,11 +258,16 @@ export default class canvasHandler {
         requestAnimationFrame(this.draw.bind(this));
     }
 
-    drawLine(start, end, width = 4) {
+    drawLine(start, end, width = 4, color = false) {
         this.ctx.save();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(end.x, end.y);
         this.ctx.lineWidth = width;
+
+        if(color){
+            this.ctx.strokeStyle = color;
+        }
+
         this.ctx.stroke();
         this.ctx.restore();
     }
@@ -284,12 +289,26 @@ export default class canvasHandler {
 
             this.map.voronoi.setDisplay(display);
             // Get visible cells
-            this.visibleCells = this.map.getCells(display);
+            // this.visibleCells = this.map.getCells(display);
+            this.visibleCells = this.map.tempCellDraw;
             // Draw visible cells
             this.map.voronoi.renderMap(this.visibleCells, this.ctx);
-
             // this.map.voronoi.render(this.ctx, display);
+
+            // Temp - draw edges
+            this.drawEdges(this.map.edges);
+
         }
+    }
+
+    drawEdges(edges) {
+        for(let i = 0; i < edges.length; i++) {
+            let edge = edges[i];
+            let start = edge.corners[0];
+            let end   = edge.corners[1];
+            this.drawLine(start, end, 4, edge.color);
+        }
+
     }
 
     // In progress debug function

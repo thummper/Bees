@@ -4,12 +4,14 @@ const SeedRandom = require('seedrandom');
 
 
 import customVoronoi from './customVoronoi.js';
-import {Cell, Corner} from './cell.js';
+import Cell from './cell.js';
+import Corner from './corner.js';
 import ColourHandler from './colourHandler.js';
 import SimplexNoise from 'simplex-noise';
 import {Queue, Bounding, edgeDistance, maxMinAvg} from './helper/util.js';
 import {randomNumber, perpendicularDistance} from './helper.js';
 import BiomeAssigner from './biomeAssigner.js';
+import Edge from "./edge.js";
 
 
 
@@ -41,11 +43,14 @@ export default class Map {
         this.equator = {};
         this.points     = [];
         this.cells      = [];
+        //temp
+        this.tempCellDraw = [];
         this.waterCells = [];
         this.landCells  = [];
         this.mountainCells = [];
         this.edgeCells  = [];
         this.cornerMap  = [];
+        this.edges      = [];
 
         this.mountainScale = 1000;
         this.oceanScale    = 3400;
@@ -73,6 +78,9 @@ export default class Map {
         this.colourHandler = new ColourHandler();
         this.biomeAssigner = new BiomeAssigner();
         this.startMap();
+
+
+
 
     }
 
@@ -174,9 +182,13 @@ export default class Map {
             this.relaxCounter += 1;
         }
 
+        console.log(this.voronoi)
+
         // Generate graph structures.
         this.createCellCorners();
+
         this.attachCellNeighbours();
+        this.createCellEdges();
 
         this.assignWater();
         this.assignMoisture();
@@ -291,15 +303,8 @@ export default class Map {
         // Loop through all corners and assign height values to them.
         let assignedHeights = []
         if(this.cornerMap.length > 0) {
-
-
-            console.log(this.cornerMap);
-
             for(let cornerKey in this.cornerMap) {
                 let corner = this.cornerMap[cornerKey];
-
-
-
                 let scale  = randomNumber(this.heightScale * 0.86, this.heightScale);
                 let height = this.heightNoise.noise2D( corner.x / scale, corner.y / scale);
                 corner.height = height;
@@ -342,12 +347,143 @@ export default class Map {
         // }
     }
 
+
+
+    // Create cell edges
+    createCellEdges() {
+        let cornerKeys = Object.keys(this.cornerMap);
+        let edgeMap = {};
+        for(let i = 0; i < cornerKeys.length; i++) {
+            let corner = this.cornerMap[cornerKeys[i]];
+            let connections = corner.connections;
+            for(let j = 0; j < connections.length; j++) {
+                // For each connection
+                let connection = connections[j];
+                let conCorner  = connection.corner;
+                // Make an edge
+
+                let name1 = corner.name + conCorner.name;
+                let name2 = conCorner.name + corner.name;
+
+                let c1Cells = corner.cells;
+                let c2Cells = conCorner.cells;
+
+
+
+                let intersection = [...c1Cells].filter(x => c2Cells.has(x));
+
+                if( (name1 in edgeMap) || (name2 in edgeMap) ) {
+                    // Try and add extra intersection cells to corner
+                    let edge = edgeMap[name1];
+                    edge.addCells(intersection);
+
+                } else {
+                    let edge = new Edge([corner, connection.corner]);
+                    edgeMap[name1] = edge;
+                    edgeMap[name2] = edge;
+                    edge.addCells(intersection);
+                    this.edges.push(edge);
+                }
+
+
+
+
+
+
+
+
+
+                // We need some logic to check if this edge has already been made
+
+
+                // let connection = connections[j];
+                // let makeEdge = this.shouldMakeEdge(corner, connection.corner);
+                // if(makeEdge != false) {
+                //     let [corner1, corner2, edgeCells] = makeEdge;
+                //     console.log("Making an edge");
+                //     let edge = new Edge([corner1, corner2], edgeCells);
+                //     this.edges.push(edge);
+                // }
+            }
+
+            for(let i = 0; i < this.edges.length; i++){
+                let edge = this.edges[i];
+                if(edge.cells.length >= 3) {
+                    edge.color = "#39ff14";
+                } else {
+                    edge.color = "#f8234d";
+                }
+            }
+
+            console.log(" EDGE LENGTH: ", this.edges.length)
+        }
+
+
+    }
+
+    // Should we make an edge between 2 corners?
+    shouldMakeEdge(corner1, corner2) {
+        /*
+        When should we make an edge?
+        - Both corners must share the same 2 cells
+        - The shared cells must be neighbours
+        */
+        let cells1 = corner1.cells;
+        let cells2 = corner2.cells;
+
+
+
+
+        console.log("Corner 1 has: ", cells1.size, " cells");
+        console.log("Corner 2 has: ", cells2.size, " cells");
+
+        // Could cells be a set and then we could test union?
+        let intersection = new Set(
+            [...cells1].filter(x => cells2.has(x))
+        );
+        // Temp
+        cells1 = [...cells1];
+        cells2 = [...cells2];
+        this.tempCellDraw = this.tempCellDraw.concat(cells1, cells2)
+
+
+        intersection = [...intersection];
+        if(intersection.length >= 1) {
+            console.log("Intersection has at least 2");
+            // Now check if intersected cells are neighbours
+            let makeEdge = true;
+            // Foreach cell in intersection, all other cells must have this cell as a neighbour
+            for(let i = 0; i < intersection.length; i++) {
+                let intCell = intersection[i];
+                for(let j = 0; j < intersection.length; j++) {
+                    if(j != i) {
+                        let testCell = intersection[j];
+                        let testNeighbors = testCell.neighbours;
+                        // Test if int cell is in neigbours
+                        if(! testNeighbors.includes(intCell) ){
+                            // cells are not neighbours, should not make a cell.
+                            makeEdge = false;
+                        }
+                    }
+                }
+            }
+            console.log("Tested intersection should we made edge: ", makeEdge);
+
+            if(makeEdge) {
+                return [corner1, corner2, intersection];
+            }
+        }
+
+        return false;
+    }
+
+
     // Create all cell corners here, making sure they are unique
     createCellCorners() {
         for(let i = 0; i < this.cells.length; i++) {
             let cell = this.cells[i];
-            let cornerPoints = cell.cellPoints;
 
+            let cornerPoints = cell.cellPoints;
             let tempCorners  = [];
             // TODO: refactor
             // Might do two loops to help my small loop
@@ -374,11 +510,14 @@ export default class Map {
                     cell.corners.push(corner);
                     this.cornerMap[cornerName] = corner;
                     tempCorners.push(corner);
+                    corner.addCell(cell);
 
                 } else {
                     // Corner has already been created.
-                    cell.corners.push( this.cornerMap[cornerName]);
-                    tempCorners.push(this.cornerMap[cornerName]);
+                    let c = this.cornerMap[cornerName];
+                    c.addCell(cell);
+                    cell.corners.push(c);
+                    tempCorners.push(c);
                 }
             }
 
@@ -397,7 +536,6 @@ export default class Map {
                 if(lastInd < 0){
                     lastInd = tempCorners.length - 1;
                 }
-
                 corner.addConnection( tempCorners[lastInd] );
                 corner.addConnection( tempCorners[nextInd] );
             }
