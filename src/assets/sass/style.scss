@@ -78,4 +78,33 @@
     }
 }
 
+.tabContainer {
+    width: 100%;
+    height: 90vh;
+}
+.tabNavigation {
+    width: 100%;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    .tab {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        flex-grow: 1;
+        width: auto;
+        height: 90%;
+        cursor: pointer;
+        transition: all 0.15s;
+        &:hover {
+            background-color: lighten($slate, 10);
+
+        }
+        &:not(:last-child) {
+            border-right: solid 2.5px lighten($slate, 15);
+        }
+    }
+}
+
 

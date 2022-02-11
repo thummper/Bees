@@ -289,7 +289,7 @@ export default class canvasHandler {
             // this.visibleCells = this.map.tempCellDraw;
             // Draw visible cells
             this.map.voronoi.renderMap(this.visibleCells, this.ctx);
-            // this.map.voronoi.render(this.ctx, display);
+            //this.map.voronoi.render(this.ctx, display);
 
             // Temp - draw edges
             // console.log("Drawing ", this.visibleCells.length, " cells");
@@ -297,20 +297,20 @@ export default class canvasHandler {
             //     let cell = this.visibleCells[i];
             //     this.drawEdges(cell.edges)
             // }
-            this.ctx.lineWidth = 4;
-            let edges = [];
-            for(let i = 0; i < this.visibleCells.length; i++) {
-                let cell = this.visibleCells[i];
-                let cellEdges = cell.edges;
-                for(let j = 0; j < cellEdges.length; j++) {
-                    let edge = cellEdges[j];
-                    edges.push(edge);
-                }
-            }
-            for(let i = 0; i < edges.length; i++) {
-                this.drawEdges(edges[i]);
-            }
-            this.ctx.stroke();
+            // this.ctx.lineWidth = 4;
+            // let edges = [];
+            // for(let i = 0; i < this.visibleCells.length; i++) {
+            //     let cell = this.visibleCells[i];
+            //     let cellEdges = cell.edges;
+            //     for(let j = 0; j < cellEdges.length; j++) {
+            //         let edge = cellEdges[j];
+            //         edges.push(edge);
+            //     }
+            // }
+            // for(let i = 0; i < edges.length; i++) {
+            //     this.drawEdges(edges[i]);
+            // }
+            // this.ctx.stroke();
 
         }
     }
