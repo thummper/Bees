@@ -53,9 +53,17 @@
             </form>
         </div>
     </div>
+
+	<div id="gameSettings" class="tab">
+
+
+
+	</div>
+
+
   </div>
   <div class="tabNavigation">
-    <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tab"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
+    <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tabButton"  v-on:click="tabPress(tab.clickAction)"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
   </div>
 
 
@@ -73,46 +81,71 @@ import InputHandler from "@/assets/js/inputHandler.js";
 
 
 export default {
-  name: 'App',
-  data() {
-    return {
-      test: "Hello Beans",
-      showDebug: false,
-      navigationTabs: [
-        {name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},
-        {name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
+	name: 'App',
+	data() {
+	return {
+		test: "Hello Beans",
+		showDebug: false,
+		navigationTabs: [
+		{name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},
+		{name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
 
-      ],
-    }
-  },
-  components: {
-    //HelloWorld
-  },
-  mounted() {
-    eva.replace();
-    let mapContainer  = document.querySelector('#mapContainer');
-    let canvas        = mapContainer.querySelector("#mapDiagram");
-    let canvasHandler = new CanvasHandler(mapContainer, canvas);
-    let mapOptions = {
-      'seed': 42,
-      'x': -5000,
-      'y': -5000,
-      'width': 10000,
-      'height': 10000,
-      'numPoints': 1000
-    }
-    let map = new Map(mapOptions);
-    canvasHandler.attachMap(map);
-    let inputHandler  = new InputHandler(canvasHandler);
-    // Get debug panel
-    let debugPanel = document.querySelector(".debugContainer");
-    inputHandler.attachDebug(debugPanel);
-  },
-  methods: {
-    toggleDebug(){
-      this.showDebug = !this.showDebug;
-    }
-  }
+		],
+		activeTab: null,
+	}
+	},
+	components: {
+	//HelloWorld
+	},
+	methods: {
+	toggleDebug(){
+		this.showDebug = !this.showDebug;
+	},
+	removeActiveTab() {
+		this.activeTab.style.display = "none";
+		this.activeTab.style.zIndex  = "-100";
+		this.activeTab = null;
+	},
+
+	tabPress(tab) {
+		let newTab = document.getElementById(tab);
+		if(tab == "mapContainer") {
+			if(this.activeTab != null) {
+				this.removeActiveTab();
+			}
+		} else if(newTab == this.activeTab) {
+			this.removeActiveTab();
+		} else {
+			if(this.activeTab != null) {
+				this.activeTab.style.display = "none";
+				this.activeTab.style.zIndex  = "-100";
+			}
+			this.activeTab = newTab;
+			newTab.style.display = "flex";
+			newTab.style.zIndex  = "1000";
+		}
+	}
+	},
+	mounted() {
+	eva.replace();
+	let mapContainer  = document.querySelector('#mapContainer');
+	let canvas        = mapContainer.querySelector("#mapDiagram");
+	let canvasHandler = new CanvasHandler(mapContainer, canvas);
+	let mapOptions = {
+		'seed': 42,
+		'x': -5000,
+		'y': -5000,
+		'width': 10000,
+		'height': 10000,
+		'numPoints': 1000
+	}
+	let map = new Map(mapOptions);
+	canvasHandler.attachMap(map);
+	let inputHandler  = new InputHandler(canvasHandler);
+	// Get debug panel
+	let debugPanel = document.querySelector(".debugContainer");
+	inputHandler.attachDebug(debugPanel);
+	},
 }
 
 

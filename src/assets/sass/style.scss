@@ -79,6 +79,7 @@
 }
 
 .tabContainer {
+    position: relative;
     width: 100%;
     height: 90vh;
 }
@@ -87,7 +88,7 @@
     height: 10vh;
     display: flex;
     align-items: center;
-    .tab {
+    .tabButton {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -105,6 +106,16 @@
             border-right: solid 2.5px lighten($slate, 15);
         }
     }
+}
+
+.tab {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: $slate;
+    z-index: -100;
 }
 
 
