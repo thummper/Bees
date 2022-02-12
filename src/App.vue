@@ -24,31 +24,31 @@
             <form v-show="showDebug">
                 <div class="formRow">
                     <label for="equatorDistance">Render Equator Distance</label>
-                    <input type="checkbox" id="equatorDistance" >
+                    <input type="checkbox" id="equatorDistance" />
                 </div>
                 <div class="formRow">
                     <label for="equatorDistance">Render Moisture</label>
-                    <input type="checkbox" id="renderMoisture" >
+                    <input type="checkbox" id="renderMoisture" />
                 </div>
                 <div class="formRow">
                     <label for="equatorDistance">Render Height</label>
-                    <input type="checkbox" id="renderHeight" >
+                    <input type="checkbox" id="renderHeight" />
                 </div>
                 <div class="formRow">
                     <label for="drawEquator">Draw Equator</label>
-                    <input type="checkbox" id="drawEquator" >
+                    <input type="checkbox" id="drawEquator" />
                 </div>
                 <div class="formRow">
                     <label for="drawCenter">Draw Map Center</label>
-                    <input type="checkbox" id="drawCenter" >
+                    <input type="checkbox" id="drawCenter" />
                 </div>
                 <div class="formRow">
                     <label for="drawCenter">Draw Cell Centers</label>
-                    <input type="checkbox" id="drawCellCenters" >
+                    <input type="checkbox" id="drawCellCenters" />
                 </div>
                 <div class="formRow">
                     <label for="drawCenter">Draw Focused Info</label>
-                    <input type="checkbox" id="drawFocusedInfo" checked = true>
+                    <input type="checkbox" id="drawFocusedInfo" checked = true />
                 </div>
             </form>
         </div>
@@ -137,6 +137,7 @@ export default {
 			console.log("Updated: ", settingKey);
 			this.mapSettings[settingKey] = parseInt(event.target.value);
 			// TODO: When this is changed we should remake the map
+			this.makeNewMap();
 		},
 		toggleDebug() {
 			this.showDebug = !this.showDebug;
@@ -175,28 +176,26 @@ export default {
 			} else {
 				panel.style.display = "flex";
 			}
+		},
+
+
+
+		makeNewMap() {
+			let mapContainer  = document.querySelector('#mapContainer');
+			let canvas        = mapContainer.querySelector("#mapDiagram");
+			let canvasHandler = new CanvasHandler(mapContainer, canvas);
+			let map = new Map(this.mapSettings);
+			canvasHandler.attachMap(map);
+			let inputHandler  = new InputHandler(canvasHandler);
+			// Get debug panel
+			let debugPanel = document.querySelector(".debugContainer");
+			inputHandler.attachDebug(debugPanel);
 		}
 	},
+
 	mounted() {
 		eva.replace();
-		let mapContainer  = document.querySelector('#mapContainer');
-		let canvas        = mapContainer.querySelector("#mapDiagram");
-		let canvasHandler = new CanvasHandler(mapContainer, canvas);
-		let mapOptions = {
-			'seed': 42,
-			'x': -5000,
-			'y': -5000,
-			'width': 10000,
-			'height': 10000,
-			'numPoints': 1000,
-			'relaxationPasses': 2,
-		}
-		let map = new Map(mapOptions);
-		canvasHandler.attachMap(map);
-		let inputHandler  = new InputHandler(canvasHandler);
-		// Get debug panel
-		let debugPanel = document.querySelector(".debugContainer");
-		inputHandler.attachDebug(debugPanel);
+		this.makeNewMap();
 	},
 }
 

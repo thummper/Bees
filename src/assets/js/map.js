@@ -26,8 +26,8 @@ export default class Map {
         // General map vars
         this.minx = options.x;
         this.miny = options.y;
-        this.maxx = options.width;
-        this.maxy = options.height;
+        this.maxx = options.size;
+        this.maxy = options.size;
 
         this.seed      = options.seed;
         this.numPoints = options.numPoints;
@@ -68,7 +68,7 @@ export default class Map {
 
         // Control Lloyd relaxation
         this.relaxCounter = 0;
-        this.maxRelax     = 3;
+        this.maxRelax     = options.relaxationPasses;
         // Terrain information
         this.lowestHeight  = null;
         this.highestHeight = null;
