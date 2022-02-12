@@ -55,8 +55,9 @@ input[type="checkbox"] {
     margin-top: 32px;
     padding: 8px;
     box-sizing: border-box;
-    background: rgba(#E6EDE9, 0.7);
+    background: rgba($slate, 0.8);
     border-radius: 4px;
+    color: white;
 
 
 
@@ -131,6 +132,10 @@ input[type="checkbox"] {
 }
 
 .generationSettings {
+    input {
+        text-align: right;
+    }
+
     .accordionButton {
         background-color: $wine;
         border: none;

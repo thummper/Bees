@@ -9,7 +9,7 @@ export default class canvasHandler {
 
         // Panning and zooming vars
         this.dragging = false;
-        this.zoomSensitivity = 0.05;
+        this.zoomSensitivity = 0.025;
         this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
@@ -194,11 +194,10 @@ export default class canvasHandler {
         this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
     }
 
-    keyWheel(val){
-        val = val / (this.view.zoom * 2);
-
-
-
+    keyWheel(val) {
+        console.log("KEY WHEEL");
+        val = val / (this.view.zoom);
+        console.log("VAL: ", val);
         let zoom = 1 * val * this.zoomSensitivity;
 
         let pos = {x: this.canvas.width/2, y: this.canvas.height/2};

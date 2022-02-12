@@ -14,10 +14,10 @@
             <h4 v-if="showDebug" >Debug Options</h4>
             <div class="toggleButton" @click="toggleDebug">
               <span class="closeWrapper"  v-show="showDebug">
-                <i data-eva="close-outline" />
+                <i data-eva="close-outline" data-eva-fill="#ffffff"/>
               </span>
               <span class="settingsWrapper" v-show="!showDebug">
-                <i data-eva="settings"/>
+                <i data-eva="settings" data-eva-fill="#ffffff"/>
               </span>
             </div>
           </div>
@@ -62,27 +62,27 @@
 					<form>
 						<div class="formRow">
 							<label for="mapSeed">Map Seed</label>
-							<input type="number" id="mapSeed" value="42" />
+							<input type="number" id="mapSeed" @input="updateSettings('seed', $event)" :value="mapSettings.seed" />
 						</div>
 						<div class="formRow">
 							<label for="mapStart">Map Start</label>
-							<input type="number" id="mapStart" value="-5000" />
+							<input type="number" id="mapStart" @input="updateSettings('x', $event)" :value="mapSettings.x" />
 						</div>
 						<div class="formRow">
 							<label for="mapEnd">Map End</label>
-							<input type="number" id="mapEnd" value="-5000" />
+							<input type="number" id="mapEnd" @input="updateSettings('y', $event)" :value="mapSettings.y" />
 						</div>
 						<div class="formRow">
 							<label for="mapSize">Map Size</label>
-							<input type="number" id="mapSize" value="10000" />
+							<input type="number" id="mapSize" @input="updateSettings('size', $event)" :value="mapSettings.size" />
 						</div>
 						<div class="formRow">
 							<label for="mapPoints">Map Points</label>
-							<input type="number" id="mapPoints" value="1000" />
+							<input type="number" id="mapPoints" @input="updateSettings('numPoints', $event)" :value="mapSettings.numPoints" />
 						</div>
 						<div class="formRow">
 							<label for="lloydPasses">Lloyd Passes</label>
-							<input type="number" id="lloydPasses" value="3"/>
+							<input type="number" id="lloydPasses" @input="updateSettings('relaxationPasses', $event)" :value="mapSettings.relaxationPasses"/>
 						</div>
 					</form>
 				</div>
@@ -90,6 +90,8 @@
 		</div>
 	</div>
   </div>
+
+
   <div class="tabNavigation">
     <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tabButton"  v-on:click="tabPress(tab.clickAction)"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
   </div>
@@ -99,7 +101,6 @@
 
 
 </template>
-
 <script>
 
 import * as eva from 'eva-icons';
@@ -111,22 +112,33 @@ import InputHandler from "@/assets/js/inputHandler.js";
 export default {
 	name: 'App',
 	data() {
-	return {
-		test: "Hello Beans",
-		showDebug: false,
-		navigationTabs: [
-		{name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},
-		{name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
-
-		],
-		activeTab: null,
-	}
+		return {
+			mapSettings: {
+				'seed': 42,
+				'x': -5000,
+				'y': -5000,
+				'size': 10000,
+				'numPoints': 1000,
+				'relaxationPasses': 2,
+			},
+			showDebug: false,
+			navigationTabs: [
+			{name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},
+			{name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
+			],
+			activeTab: null,
+		}
 	},
 	components: {
 	//HelloWorld
 	},
 	methods: {
-		toggleDebug(){
+		updateSettings(settingKey, event) {
+			console.log("Updated: ", settingKey);
+			this.mapSettings[settingKey] = parseInt(event.target.value);
+			// TODO: When this is changed we should remake the map
+		},
+		toggleDebug() {
 			this.showDebug = !this.showDebug;
 		},
 		removeActiveTab() {
@@ -134,7 +146,6 @@ export default {
 			this.activeTab.style.zIndex  = "-100";
 			this.activeTab = null;
 		},
-
 		tabPress(tab) {
 			let newTab = document.getElementById(tab);
 			if(tab == "mapContainer") {
@@ -153,7 +164,7 @@ export default {
 				newTab.style.zIndex  = "1000";
 			}
 		},
-		accordionButtonPress(event){
+		accordionButtonPress(event) {
 			let accButton = event.target;
 			let panel = accButton.nextElementSibling;
 
@@ -164,7 +175,6 @@ export default {
 			} else {
 				panel.style.display = "flex";
 			}
-
 		}
 	},
 	mounted() {
@@ -190,10 +200,4 @@ export default {
 	},
 }
 
-
-
-
-
 </script>
-
-
