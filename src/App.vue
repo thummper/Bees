@@ -55,12 +55,40 @@
     </div>
 
 	<div id="gameSettings" class="tab">
-
-
-
+		<div class="tabWrapper">
+			<div class="generationSettings">
+				<button @click="accordionButtonPress" class="accordionButton">Generation Settings</button>
+				<div class="accordionPanel">
+					<form>
+						<div class="formRow">
+							<label for="mapSeed">Map Seed</label>
+							<input type="number" id="mapSeed" value="42" />
+						</div>
+						<div class="formRow">
+							<label for="mapStart">Map Start</label>
+							<input type="number" id="mapStart" value="-5000" />
+						</div>
+						<div class="formRow">
+							<label for="mapEnd">Map End</label>
+							<input type="number" id="mapEnd" value="-5000" />
+						</div>
+						<div class="formRow">
+							<label for="mapSize">Map Size</label>
+							<input type="number" id="mapSize" value="10000" />
+						</div>
+						<div class="formRow">
+							<label for="mapPoints">Map Points</label>
+							<input type="number" id="mapPoints" value="1000" />
+						</div>
+						<div class="formRow">
+							<label for="lloydPasses">Lloyd Passes</label>
+							<input type="number" id="lloydPasses" value="3"/>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
 	</div>
-
-
   </div>
   <div class="tabNavigation">
     <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tabButton"  v-on:click="tabPress(tab.clickAction)"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
@@ -98,53 +126,67 @@ export default {
 	//HelloWorld
 	},
 	methods: {
-	toggleDebug(){
-		this.showDebug = !this.showDebug;
-	},
-	removeActiveTab() {
-		this.activeTab.style.display = "none";
-		this.activeTab.style.zIndex  = "-100";
-		this.activeTab = null;
-	},
+		toggleDebug(){
+			this.showDebug = !this.showDebug;
+		},
+		removeActiveTab() {
+			this.activeTab.style.display = "none";
+			this.activeTab.style.zIndex  = "-100";
+			this.activeTab = null;
+		},
 
-	tabPress(tab) {
-		let newTab = document.getElementById(tab);
-		if(tab == "mapContainer") {
-			if(this.activeTab != null) {
+		tabPress(tab) {
+			let newTab = document.getElementById(tab);
+			if(tab == "mapContainer") {
+				if(this.activeTab != null) {
+					this.removeActiveTab();
+				}
+			} else if(newTab == this.activeTab) {
 				this.removeActiveTab();
+			} else {
+				if(this.activeTab != null) {
+					this.activeTab.style.display = "none";
+					this.activeTab.style.zIndex  = "-100";
+				}
+				this.activeTab = newTab;
+				newTab.style.display = "flex";
+				newTab.style.zIndex  = "1000";
 			}
-		} else if(newTab == this.activeTab) {
-			this.removeActiveTab();
-		} else {
-			if(this.activeTab != null) {
-				this.activeTab.style.display = "none";
-				this.activeTab.style.zIndex  = "-100";
+		},
+		accordionButtonPress(event){
+			let accButton = event.target;
+			let panel = accButton.nextElementSibling;
+
+			accButton.classList.toggle("active");
+
+			if(panel.style.display == "flex") {
+				panel.style.display = "none";
+			} else {
+				panel.style.display = "flex";
 			}
-			this.activeTab = newTab;
-			newTab.style.display = "flex";
-			newTab.style.zIndex  = "1000";
+
 		}
-	}
 	},
 	mounted() {
-	eva.replace();
-	let mapContainer  = document.querySelector('#mapContainer');
-	let canvas        = mapContainer.querySelector("#mapDiagram");
-	let canvasHandler = new CanvasHandler(mapContainer, canvas);
-	let mapOptions = {
-		'seed': 42,
-		'x': -5000,
-		'y': -5000,
-		'width': 10000,
-		'height': 10000,
-		'numPoints': 1000
-	}
-	let map = new Map(mapOptions);
-	canvasHandler.attachMap(map);
-	let inputHandler  = new InputHandler(canvasHandler);
-	// Get debug panel
-	let debugPanel = document.querySelector(".debugContainer");
-	inputHandler.attachDebug(debugPanel);
+		eva.replace();
+		let mapContainer  = document.querySelector('#mapContainer');
+		let canvas        = mapContainer.querySelector("#mapDiagram");
+		let canvasHandler = new CanvasHandler(mapContainer, canvas);
+		let mapOptions = {
+			'seed': 42,
+			'x': -5000,
+			'y': -5000,
+			'width': 10000,
+			'height': 10000,
+			'numPoints': 1000,
+			'relaxationPasses': 2,
+		}
+		let map = new Map(mapOptions);
+		canvasHandler.attachMap(map);
+		let inputHandler  = new InputHandler(canvasHandler);
+		// Get debug panel
+		let debugPanel = document.querySelector(".debugContainer");
+		inputHandler.attachDebug(debugPanel);
 	},
 }
 
