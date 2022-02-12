@@ -89,6 +89,20 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="infoPanel" v-show="showInfoPanel">
+          <div class="containerTitle">
+            <h4>Info Panel</h4>
+            <div class="toggleButton" >
+              <span class="closeWrapper"  >
+                <i data-eva="close-outline" data-eva-fill="#ffffff"/>
+              </span>
+
+            </div>
+          </div>
+	</div>
+
+
   </div>
 
 
@@ -121,6 +135,7 @@ export default {
 				'numPoints': 1000,
 				'relaxationPasses': 2,
 			},
+			showInfoPanel: true,
 			showDebug: false,
 			navigationTabs: [
 			{name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},

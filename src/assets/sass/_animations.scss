@@ -7,3 +7,12 @@
          opacity: 1;
     }
 }
+
+@keyframes fromLeft {
+     from {
+          left: -400px;
+     }
+     to {
+          left: $infoPanelLeft;
+     }
+}
