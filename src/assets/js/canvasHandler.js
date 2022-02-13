@@ -9,7 +9,7 @@ export default class canvasHandler {
 
         // Panning and zooming vars
         this.dragging = false;
-        this.zoomSensitivity = 0.025;
+        this.zoomSensitivity = 0.3;
         this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
@@ -59,7 +59,7 @@ export default class canvasHandler {
         this.view = {
             x: this.canvas.width / 2.5,
             y: this.canvas.height / 2.5,
-            zoom: 1
+            zoom: 0.09
         };
         this.draw();
     }
@@ -82,7 +82,7 @@ export default class canvasHandler {
     // Track keypresses for keyboard navigation
     keydown(event) {
         let code = event.code;
-        switch(code){
+        switch(code) {
             case "ArrowUp":
             case "KeyW":
                 // Pan up
@@ -136,7 +136,7 @@ export default class canvasHandler {
         }
     }
 
-    getGlobalMousePosition(event){
+    getGlobalMousePosition(event) {
         // Get local mouse
         let loc  = this.getMousePosition(event);
         // Inverse translation matrix?
@@ -204,32 +204,32 @@ export default class canvasHandler {
         this.view.zoom = Math.min(this.maxZoom, this.view.zoom);
     }
 
-    keyWheel(val) {
-        console.log("KEY WHEEL");
-        val = val / (this.view.zoom);
-        console.log("VAL: ", val);
-        let zoom = 1 * val * this.zoomSensitivity;
 
+    // Zoom handling for key press
+    keyWheel(val) {
+
+        val = val / (this.view.zoom);
+        let zoom = 1 * val * this.zoomSensitivity;
         let pos = {x: this.canvas.width/2, y: this.canvas.height/2};
         if(this.trackedMousePos != null){
             pos = this.trackedMousePos
         }
         let wx = (pos.x - this.view.x) / (this.canvas.width * this.view.zoom);
         let wy = (pos.y - this.view.y) / (this.canvas.height * this.view.zoom);
-
         this.view.x -= wx * this.canvas.width * zoom;
         this.view.y -= wy * this.canvas.height * zoom;
-
         this.adjustZoom(zoom);
-
     }
 
 
-    // Mouse wheel
+    // Zoom handling for mouse wheel
     mouseWheel(event) {
         let {deltaY} = event;
         let dir  = deltaY > 0 ? -1 : 1;
-        let zoom = 1 * dir * this.zoomSensitivity;
+        let zoom = 1 * dir * (this.zoomSensitivity * this.view.zoom);
+
+        console.log("Zoom: ", zoom);
+
         let pos = this.getMousePosition(event);
         let wx  = ( pos.x - this.view.x ) / ( this.canvas.width * this.view.zoom );
         let wy  = ( pos.y - this.view.y ) / ( this.canvas.height * this.view.zoom );

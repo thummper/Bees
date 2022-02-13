@@ -16,3 +16,14 @@
           left: $infoPanelLeft;
      }
 }
+
+@keyframes toLeft {
+     from {
+          left: $infoPanelLeft;
+
+     }
+     to {
+          left: -400px;
+     }
+}
+

@@ -57,7 +57,7 @@
 	<div id="gameSettings" class="tab">
 		<div class="tabWrapper">
 			<div class="generationSettings">
-				<button @click="accordionButtonPress" class="accordionButton">Generation Settings</button>
+				<button @click="accordionButtonPress" class="accordionButton">Generation Settings (changing these will reset the game)</button>
 				<div class="accordionPanel">
 					<form>
 						<div class="formRow">
@@ -84,30 +84,25 @@
 							<label for="lloydPasses">Lloyd Passes</label>
 							<input type="number" id="lloydPasses" @input="updateSettings('relaxationPasses', $event)" :value="mapSettings.relaxationPasses"/>
 						</div>
+						<div class="formRow formRowPadding">
+							<button class="generalButton" @click.prevent="makeNewMap()">Reset Map</button>
+						</div>
 					</form>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="infoPanel" v-show="showInfoPanel">
-          <div class="containerTitle">
-            <h4>Info Panel</h4>
-            <div class="toggleButton" >
-              <span class="closeWrapper"  >
-                <i data-eva="close-outline" data-eva-fill="#ffffff"/>
-              </span>
+	<InfoPanel :show="infoVisible" @close-info-panel="hideInfoPanel()" />
 
-            </div>
-          </div>
-	</div>
+
 
 
   </div>
 
 
   <div class="tabNavigation">
-    <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tabButton"  v-on:click="tabPress(tab.clickAction)"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
+    <div v-for="tab in navigationTabs" :key="tab.name" :class="tab.css" class="tabButton"  v-on:click="tabPress(tab.clickAction, event)"><i :data-eva="tab.icon" data-eva-fill="#ffffff"></i></div>
   </div>
 
 
@@ -121,7 +116,7 @@ import * as eva from 'eva-icons';
 import CanvasHandler from "@/assets/js/canvasHandler.js";
 import Map from "@/assets/js/map.js";
 import InputHandler from "@/assets/js/inputHandler.js";
-
+import InfoPanel from "@/components/InfoPanel.vue";
 
 export default {
 	name: 'App',
@@ -140,7 +135,7 @@ export default {
 			canvas: null,
 			canvasHandler: new CanvasHandler(),
 
-			showInfoPanel: true,
+			infoVisible: true,
 			showDebug: false,
 			navigationTabs: [
 			{name: "home", css:"home-tab", icon: "home", clickAction: "mapContainer"},
@@ -151,18 +146,23 @@ export default {
 	},
 	watch: {
 		'canvasHandler.closestCell': function() {
+			this.showInfoPanel();
 			console.log("closestCell has updated");
 		}
 	},
 	components: {
-	//HelloWorld
+		InfoPanel
 	},
 	methods: {
+		hideInfoPanel() {
+			this.infoVisible = false;
+		},
+		showInfoPanel() {
+			this.infoVisible = true;
+		},
 		updateSettings(settingKey, event) {
 			console.log("Updated: ", settingKey);
 			this.mapSettings[settingKey] = parseInt(event.target.value);
-			// TODO: When this is changed we should remake the map
-			this.makeNewMap();
 		},
 		toggleDebug() {
 			this.showDebug = !this.showDebug;
@@ -172,7 +172,11 @@ export default {
 			this.activeTab.style.zIndex  = "-100";
 			this.activeTab = null;
 		},
-		tabPress(tab) {
+		showActiveTab() {
+			this.activeTab.style.display = "flex";
+			this.activeTab.style.zIndex  = "1000";
+		},
+		tabPress(tab, event) {
 			let newTab = document.getElementById(tab);
 			if(tab == "mapContainer") {
 				if(this.activeTab != null) {
@@ -181,13 +185,13 @@ export default {
 			} else if(newTab == this.activeTab) {
 				this.removeActiveTab();
 			} else {
+
 				if(this.activeTab != null) {
-					this.activeTab.style.display = "none";
-					this.activeTab.style.zIndex  = "-100";
+					this.removeActiveTab();
+
 				}
 				this.activeTab = newTab;
-				newTab.style.display = "flex";
-				newTab.style.zIndex  = "1000";
+				this.showActiveTab();
 			}
 		},
 		accordionButtonPress(event) {
