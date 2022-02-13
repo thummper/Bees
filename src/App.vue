@@ -135,6 +135,11 @@ export default {
 				'numPoints': 1000,
 				'relaxationPasses': 2,
 			},
+			map: null,
+			mapContainer: null,
+			canvas: null,
+			canvasHandler: new CanvasHandler(),
+
 			showInfoPanel: true,
 			showDebug: false,
 			navigationTabs: [
@@ -142,6 +147,11 @@ export default {
 			{name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
 			],
 			activeTab: null,
+		}
+	},
+	watch: {
+		'canvasHandler.closestCell': function() {
+			console.log("closestCell has updated");
 		}
 	},
 	components: {
@@ -196,14 +206,22 @@ export default {
 
 
 		makeNewMap() {
-			let mapContainer  = document.querySelector('#mapContainer');
-			let canvas        = mapContainer.querySelector("#mapDiagram");
-			let canvasHandler = new CanvasHandler(mapContainer, canvas);
-			let map = new Map(this.mapSettings);
-			canvasHandler.attachMap(map);
-			let inputHandler  = new InputHandler(canvasHandler);
-			// Get debug panel
-			let debugPanel = document.querySelector(".debugContainer");
+
+			this.mapContainer  = document.querySelector('#mapContainer'),
+			this.canvas        = this.mapContainer.querySelector("#mapDiagram"),
+			this.map           = new Map(this.mapSettings);
+
+			this.canvasHandler.setContainer(this.mapContainer);
+			this.canvasHandler.setCanvas(this.canvas);
+
+
+
+			this.canvasHandler.attachMap(this.map);
+			this.canvasHandler.init();
+
+
+			let inputHandler  = new InputHandler(this.canvasHandler);
+			let debugPanel    = document.querySelector(".debugContainer");
 			inputHandler.attachDebug(debugPanel);
 		}
 	},

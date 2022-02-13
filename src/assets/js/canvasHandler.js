@@ -1,11 +1,11 @@
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
 
-    constructor(container, canvas) {
+    constructor() {
         // The canvas wrapper and canvas are passed.
-        this.container = container;
-        this.canvas    = canvas;
-        this.ctx       = this.canvas.getContext("2d");
+        this.container = null;
+        this.canvas    = null;
+        this.ctx       = null;
 
         // Panning and zooming vars
         this.dragging = false;
@@ -20,15 +20,11 @@ export default class canvasHandler {
 
         // Maintain visible cells.
         this.visibleCells = null;
-
-
-
         this.viewPos = {
             prevX: null,
             prevY: null,
             dragging: false
         };
-
         this.debugSettings = {
             'drawEquator': false,
             'drawCenter': false,
@@ -42,15 +38,29 @@ export default class canvasHandler {
         this.map = null;
         // Call functions
         // Make sure canvas is the correct size
+        this.view = null;
+        // Register important event listeners
+
+    }
+
+    setContainer(container) {
+        this.container = container;
+    }
+
+    setCanvas(canvas){
+        this.canvas = canvas;
+        this.ctx    = canvas.getContext("2d");
+    }
+
+    init() {
+        this.registerListeners();
+
         this.windowResize();
         this.view = {
             x: this.canvas.width / 2.5,
             y: this.canvas.height / 2.5,
             zoom: 1
         };
-        // Register important event listeners
-        this.registerListeners();
-        // Start drawing loop.
         this.draw();
     }
 

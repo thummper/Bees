@@ -23,6 +23,9 @@ const dint = require('d3-interpolate');
 const randomColour = require('randomcolor');
 export default class Map {
     constructor(options) {
+
+        console.log("NEW MAP: ", options);
+
         // General map vars
         this.minx = options.x;
         this.miny = options.y;
