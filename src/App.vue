@@ -1,4 +1,17 @@
 <template>
+	<div class="topBar">
+		<div class="gameStatContainer">
+			<div class="gameStat">
+				<div class="statIcon coin">
+					<div class="coinInner"/>
+				</div>
+				<div class="statValue"> {{formattedMoney}} </div>
+			</div>
+
+
+
+		</div>
+	</div>
 
   <div class="tabContainer">
     <div id="mapContainer">
@@ -109,6 +122,7 @@
 import * as eva from 'eva-icons';
 import CanvasHandler from "@/assets/js/canvasHandler.js";
 import Map from "@/assets/js/map.js";
+import Game from "@/assets/js/game.js";
 import InputHandler from "@/assets/js/inputHandler.js";
 import InfoPanel from "@/components/InfoPanel.vue";
 
@@ -120,7 +134,7 @@ export default {
 				'seed': 42,
 				'x': -5000,
 				'y': -5000,
-				'size': 10000,
+				'size': 5000,
 				'numPoints': 1000,
 				'relaxationPasses': 2,
 			},
@@ -136,7 +150,15 @@ export default {
 			{name: "settings", css:"settings-tab", icon: "settings-2", clickAction: "gameSettings"},
 			],
 			activeTab: null,
+			game: new Game(),
 		}
+	},
+	computed: {
+		formattedMoney() {
+			return this.nFormatter(this.game.money);
+		}
+
+
 	},
 	watch: {
 		'canvasHandler.closestCell': function() {
@@ -148,6 +170,25 @@ export default {
 		InfoPanel
 	},
 	methods: {
+		nFormatter(num, digits = 2) {
+			let lookup = [
+				{value: 1, symbol: ""},
+				{value: 1e3, symbol: "k"},
+				{value: 1e6, symbol: "M"},
+				{value: 1e9, symbol: "B"},
+				{value: 1e12, symbol: "T"},
+				{value: 1e15, symbol: "P"},
+				{value: 1e18, symbol: "E"},
+			];
+			const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+			let item = lookup.slice().reverse().find(function(item) {
+				return num >= item.value;
+			});
+			return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0";
+		},
+
+
+
 		hideInfoPanel() {
 			this.infoVisible = false;
 		},

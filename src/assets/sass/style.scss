@@ -106,15 +106,61 @@ input[type="checkbox"] {
 
 }
 
+.topBar {
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    padding: 5px;
+    align-items: center;
+    background-color: $steelBlue;
+    color: white;
+    border-bottom: 2px solid darken($steelBlue, 10);
+}
 
+
+
+.gameStat {
+    display: flex;
+    align-items: center;
+    .statIcon {
+        margin-right: 10px;
+    }
+
+}
+.coin {
+
+    display: flex;
+
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: gold;
+    .coinInner {
+        margin: auto auto;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background-color: darken(gold, 15);
+    }
+}
+
+.gameStatContainer {
+    margin-left: 20px;
+}
+.gameStatContainer, .gameStat {
+    height: 100%;
+}
 
 .tabContainer {
     display: flex;
     position: relative;
     width: 100%;
-    height: 90vh;
-
+    flex: 1;
 }
+
+
+
 .tabNavigation {
     background-color: $steelBlue;
     width: 100%;

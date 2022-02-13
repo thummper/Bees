@@ -115,6 +115,7 @@ export default class canvasHandler {
         }
     }
 
+    // Handles panning for keyboard shortcuts
     moveView(x, y) {
         this.view.x += x;
         this.view.y -= y;
@@ -163,7 +164,6 @@ export default class canvasHandler {
     // Mouse button is pressed
     pointerDown(event) {
         // Pointer pressed - start drag action
-        console.log(" Pointer down pressed");
         this.viewPos.dragging = true;
         // Record start of drag
         let pos = this.getMousePosition(event);
@@ -229,9 +229,6 @@ export default class canvasHandler {
         let {deltaY} = event;
         let dir  = deltaY > 0 ? -1 : 1;
         let zoom = 1 * dir * (this.zoomSensitivity * this.view.zoom);
-
-        console.log("Zoom: ", zoom);
-
         let pos = this.getMousePosition(event);
         let wx  = ( pos.x - this.view.x ) / ( this.canvas.width * this.view.zoom );
         let wy  = ( pos.y - this.view.y ) / ( this.canvas.height * this.view.zoom );
