@@ -1,3 +1,5 @@
+import Cell from "./cell";
+
 // Canvas handler handles panning, zooming and drawing to the canvas
 export default class canvasHandler {
 
@@ -13,7 +15,7 @@ export default class canvasHandler {
         this.minZoom = 0.01;
         this.maxZoom = 5;
         this.trackedMousePos = null;
-        this.closestCell = null;
+        this.closestCell = new Cell();
 
         this.trackedKey = null;
         this.keySens = 40;

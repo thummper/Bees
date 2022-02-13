@@ -1,9 +1,17 @@
 
 
 export default class Cell {
-    constructor(cellPoints, centerPoint) {
-        this.x = centerPoint[0];
-        this.y = centerPoint[1];
+    constructor(cellPoints = [], centerPoint = []) {
+
+        if(centerPoint.length > 0) {
+            this.x = centerPoint[0];
+            this.y = centerPoint[1];
+        } else {
+            this.x = null;
+            this.y = null;
+        }
+
+
         this.cellPoints  = cellPoints;
         this.centerPoint = centerPoint;
         this.colour      = "black";

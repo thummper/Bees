@@ -1,12 +1,6 @@
 <template>
-  <!--
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld :msg='test' />
 
-  -->
   <div class="tabContainer">
-
-
     <div id="mapContainer">
         <canvas id="mapDiagram"></canvas>
         <div class="debugContainer" >
@@ -93,7 +87,7 @@
 		</div>
 	</div>
 
-	<InfoPanel :show="infoVisible" @close-info-panel="hideInfoPanel()" />
+	<InfoPanel :closestCell="canvasHandler.closestCell" :show="infoVisible" @close-info-panel="hideInfoPanel()" />
 
 
 
