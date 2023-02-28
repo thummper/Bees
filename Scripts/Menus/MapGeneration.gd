@@ -17,15 +17,58 @@ var triangles = [];
 var sites = [];
 
 
+var moistureMap = OpenSimplexNoise.new()
+
+
+
 
 func generateVoronoi():
+	
+	moistureMap.seed = 420;
+	moistureMap.period = 20.0;
+	moistureMap.persistence = 0.8;
+
 	delaunay = Delaunay.new(Rect2(0,0,width,height));
 	for p in allPoints:
 		delaunay.add_point(p);
 	triangles = delaunay.triangulate();
 	sites = delaunay.make_voronoi(triangles);
 	
+	# Assign moisture to each cell
+	for s in sites:
+		var n = moistureMap.get_noise_2d(s.center.x, s.center.y)
+		s.moisture = n;
+	
+	
+	# Generate an equator
+	var m = rand_range(-4, 4)
+	
+	var center = Vector2(width/2, height/2)
+	
+	var c = (center.y / 2) - ((center.x / 2) * m);
+	 
+	var equatorStart = Vector2(0, c);
+	var equatorEnd = Vector2(width, (width * m) + c)
+	
+	
+	for s in sites:
+		var dist = perpendicularDist(s.center, m, c);
+		
+	
 
+
+
+func perpendicularDist(point1, m, _c):
+	var x1 = point1.x;
+	var y1 = point1.y;
+	
+	var a = -m;
+	var b = 1;
+	var c = -_c;
+	
+	var d = abs(a * x1 + b * y1 + c) / sqrt(pow(a,2) + pow(b,2))
+	return d;	
+	
 	
 	
 	
